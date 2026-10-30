@@ -1,11 +1,16 @@
 location: "home"
-surface: "top-right"
-properties:
-  dismissable: true
+surface: "main-top"
+active: # UTC | midnight by default
+  from: "2026-10-30"
+  to: "2050-01-28"
+dismissable: true
+max_impressions: 5
+audience: TBD
 content:
   title: "Supersuit v0 available in beta."
   body: "The peoples' first supersuit brings you levitation, accelerated movements, and ore. Take it to new heights."
   primary_cta:
     text: "Join the waitlist"
     url: "https://supersuit.tech/examples/v0-waitlist"
+    dismiss_on_click: true
   
