@@ -1,0 +1,11 @@
+location: "home"
+surface: "top-right"
+properties:
+  dismissable: true
+content:
+  title: "Supersuit v0 available in beta."
+  body: "The peoples' first supersuit brings you levitation, accelerated movements, and ore. Take it to new heights."
+  primary_cta:
+    text: "Join the waitlist"
+    url: "https://supersuit.tech/examples/v0-waitlist"
+  
