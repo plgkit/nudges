@@ -3,6 +3,7 @@ surface: "main-top"
 active: # UTC | midnight by default
   from: "2026-10-30"
   to: "2050-01-28"
+priority: 1 # When multiple in-product messages are given the same priority, the file name/id that comes first alphabetically will be the tie breaker
 dismissible: true
 max_impressions: 5
 audience: TBD
