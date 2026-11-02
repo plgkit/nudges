@@ -3,7 +3,7 @@ surface: "main-top"
 active: # UTC | midnight by default
   from: "2026-10-30"
   to: "2050-01-28"
-priority: 5 # Lower numbers win. When multiple in-product messages share a priority, the filename that comes first alphabetically will be the tie breaker
+priority: 5 # Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
 dismissible: true # The engine records dismissals; decide() returns it alongside render_props so the renderer knows to show a close button and calls dismiss(id).
 max_impressions: 5
 audience: # These call functions the developer has defined in plgkit/audiences.py (or plgkit/audiences.ts for TypeScript)
