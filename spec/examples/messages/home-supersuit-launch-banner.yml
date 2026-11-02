@@ -3,16 +3,16 @@ surface: "main-top"
 active: # UTC | midnight by default
   from: "2026-10-30"
   to: "2050-01-28"
-priority: 5 # When multiple in-product messages are given the same priority, the file name/id that comes first alphabetically will be the tie breaker
+priority: 5 # Lower numbers win. When multiple in-product messages share a priority, the filename that comes first alphabetically will be the tie breaker
+dismissible: true # The engine records dismissals; decide() returns it alongside render_props so the renderer knows to show a close button and calls dismiss(id).
 max_impressions: 5
-audience: # These call functions the developer has defined in our predefined TBD location
+audience: # These call functions the developer has defined in plgkit/audiences.py (or plgkit/audiences.ts for TypeScript)
   require_all: [is_human, is_adult]
-  require_one_of: [is_usa_resident, is_uk_resident] 
+  require_one_of: [is_usa_resident, is_uk_resident]
   exclude: [is_staff, is_duck]
 render_props: # This can be whatever your renderer expects eg. React component props
-  dismissible: true
   title: "Supersuit v0 available in beta."
-  body: "The peoples' first supersuit brings you levitation, accelerated movements, and more. Take it to new heights."
+  body: "The people's first supersuit brings you levitation, accelerated movements, and more. Take it to new heights."
   primary_cta:
     text: "Join the waitlist"
     url: "https://supersuit.tech/examples/v0-waitlist"

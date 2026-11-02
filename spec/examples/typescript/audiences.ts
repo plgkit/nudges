@@ -16,6 +16,7 @@ type User = {
   mobile?: string;
   species?: string; // defaults to "human"
   isStaff?: boolean; // defaults to false
+  hasActiveSubscription?: boolean; // defaults to false
 };
 
 type Context = {
@@ -45,4 +46,6 @@ export const audiences = {
   is_uk_resident: ({ user }: Context) => user.countryCode === "GB",
   is_staff: ({ user }: Context) => user.isStaff ?? false,
   is_duck: ({ user }: Context) => speciesOf(user) === "duck",
+  has_active_supersuit_subscription: ({ user }: Context) =>
+    user.hasActiveSubscription ?? false,
 };

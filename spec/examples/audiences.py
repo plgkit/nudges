@@ -23,6 +23,7 @@ class User:
     mobile: Optional[str] = None
     species: str = "human"
     is_staff: bool = False
+    has_active_subscription: bool = False
 
 
 @dataclass
@@ -63,6 +64,10 @@ def is_duck(ctx: Context) -> bool:
     return ctx.user.species == "duck"
 
 
+def has_active_supersuit_subscription(ctx: Context) -> bool:
+    return ctx.user.has_active_subscription
+
+
 audiences = {
     "is_human": is_human,
     "is_adult": is_adult,
@@ -70,4 +75,5 @@ audiences = {
     "is_uk_resident": is_uk_resident,
     "is_staff": is_staff,
     "is_duck": is_duck,
+    "has_active_supersuit_subscription": has_active_supersuit_subscription,
 }
