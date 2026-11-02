@@ -9,11 +9,13 @@
 // Example shapes. Use whatever your app already has.
 type User = {
   id: string;
-  isBot: boolean;
-  birthDate: string; // "YYYY-MM-DD"
+  username: string;
   countryCode: string; // ISO 3166-1 alpha-2, e.g. "US"
-  email: string;
-  species?: string;
+  birthDate?: string; // "YYYY-MM-DD"
+  email?: string;
+  mobile?: string;
+  species?: string; // defaults to "human"
+  isStaff?: boolean; // defaults to false
 };
 
 type Context = {
@@ -31,11 +33,16 @@ function ageInYears(birthDate: string, now = new Date()): number {
   return age;
 }
 
+function speciesOf(user: User): string {
+  return user.species ?? "human";
+}
+
 export const audiences = {
-  is_human: ({ user }: Context) => !user.isBot,
-  is_adult: ({ user }: Context) => ageInYears(user.birthDate) >= 18,
+  is_human: ({ user }: Context) => speciesOf(user) === "human",
+  is_adult: ({ user }: Context) =>
+    user.birthDate != null && ageInYears(user.birthDate) >= 18,
   is_usa_resident: ({ user }: Context) => user.countryCode === "US",
   is_uk_resident: ({ user }: Context) => user.countryCode === "GB",
-  is_staff: ({ user }: Context) => user.email.endsWith("@supersuit.tech"),
-  is_duck: ({ user }: Context) => user.species === "duck",
+  is_staff: ({ user }: Context) => user.isStaff ?? false,
+  is_duck: ({ user }: Context) => speciesOf(user) === "duck",
 };

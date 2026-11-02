@@ -16,11 +16,13 @@ from typing import Any, Optional
 @dataclass
 class User:
     id: str
-    is_bot: bool
-    birth_date: date
+    username: str
     country_code: str  # ISO 3166-1 alpha-2, e.g. "US"
-    email: str
-    species: Optional[str] = None
+    birth_date: Optional[date] = None
+    email: Optional[str] = None
+    mobile: Optional[str] = None
+    species: str = "human"
+    is_staff: bool = False
 
 
 @dataclass
@@ -36,10 +38,12 @@ def _age_in_years(birth_date: date, today: Optional[date] = None) -> int:
 
 
 def is_human(ctx: Context) -> bool:
-    return not ctx.user.is_bot
+    return ctx.user.species == "human"
 
 
 def is_adult(ctx: Context) -> bool:
+    if ctx.user.birth_date is None:
+        return False
     return _age_in_years(ctx.user.birth_date) >= 18
 
 
@@ -52,7 +56,7 @@ def is_uk_resident(ctx: Context) -> bool:
 
 
 def is_staff(ctx: Context) -> bool:
-    return ctx.user.email.endswith("@supersuit.tech")
+    return ctx.user.is_staff
 
 
 def is_duck(ctx: Context) -> bool:
