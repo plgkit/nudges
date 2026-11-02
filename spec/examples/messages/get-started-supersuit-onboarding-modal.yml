@@ -11,7 +11,7 @@ render_props: # This can be whatever your renderer expects eg. React component p
   slide_1:
     title: "It's time suit up"
     subtitle: "You need to believe, to achieve."
-    asset: "get-started-supersuit-onboarding-modal/slide_1.png"
+    asset: "get-started-supersuit-onboarding-modal/slide_1.png" # In your static directory
     primary_cta:
       text: "Activate your suit"
       url: "https://supersuit.tech/examples/activate-your-suit"
