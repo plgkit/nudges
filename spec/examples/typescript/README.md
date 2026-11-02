@@ -1,6 +1,6 @@
 # TypeScript examples
 
-The examples in `spec/examples/` default to Python. If your project uses TypeScript, use the files in this `typescript/` folder instead of their Python counterparts in the root. For example, use `audiences.ts` instead of `../audiences.py`.
+The examples in `spec/examples/` default to Python. Day-one languages are Python, Go, and TypeScript. If your project uses TypeScript, use the files in this `typescript/` folder instead of their Python counterparts in the root. For example, use `audiences.ts` instead of `../audiences.py`. Go examples live in `../go/`.
 
 The message YAML in `../messages/` is shared by every language. In your app, messages live at `plgkit/nudges/messages/`.
 
