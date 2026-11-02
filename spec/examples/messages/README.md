@@ -12,9 +12,9 @@ Developers never write the ID in YAML. It always comes from the filename.
 
 `decide(location, ctx)` returns a list of winners. The list is empty when nothing matches. [`../decide-response.json`](../decide-response.json) is a `home` call that returns the banner. That file is a JSON array. The banner is the only example message at `home`, so the list has one item.
 
-Each item has `id` (the filename without `.yml`), `surface`, `dismissible`, and `render_props`.
+Each item has `id` (the filename without `.yml`), `surface`, `component`, `dismissible`, and `render_props`.
 
-The host filters that list by `surface` and renders each slot. For each item, the wrapper merges `id`, `dismissible`, `onImpression`, and `onDismiss` into the component's props alongside `render_props`. A dumb component never wires this itself. The wrapper does not merge `surface` into those props.
+The host filters that list by `surface` and renders each slot. The wrapper looks up `component` in its registry, then passes `render_props` as that component's props, plus `id`, `dismissible`, `onDismiss`, and `onImpression`. A dumb component never wires this itself. `component` and `surface` are not merged into those props.
 
 `decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The wrapper dedupes impressions: `impression(id)` fires at most once per message per page view, one `decide()` result, no matter how many times the component re-renders or remounts. A new page view, a new `decide()` call such as navigation or reload, can count again. The wrapper owns that dedupe. Dumb components stay unaware of it. The first time that result's component actually mounts or becomes visible, the wrapper calls `onImpression`, and that calls `impression(id)`, mirroring `onDismiss` calling `dismiss(id)`. The close control calls `onDismiss`. The component does not wire either call. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
 
@@ -28,12 +28,13 @@ def decide(location, ctx):
     candidates = [
         m for m in messages
         if m.location == location
-        and is_active(m, now_utc)  # UTC; a date with no time is midnight
+        and m.surface and m.component and m.render_props is not None  # missing required fields fail closed
+        and is_active(m, now_utc)  # missing from = now; missing to = forever; to is exclusive; date-only = midnight UTC
         and not dismissed(ctx.user, m.id)
         and under_max_impressions(ctx.user, m)  # read the count only; missing = unlimited
-        and audience_matches(m, ctx)
+        and audience_matches(m, ctx)  # omitted audience = everyone
     ]
-    candidates.sort(key=lambda m: (m.priority, m.id))  # lower priority, then older id
+    candidates.sort(key=lambda m: (m.priority if m.priority is not None else 100, m.id))
     winners = []
     per_surface = {}
     for m in candidates:
@@ -48,14 +49,15 @@ def decide(location, ctx):
         {
             "id": m.id,
             "surface": m.surface,
-            "dismissible": m.dismissible,
+            "component": m.component,
+            "dismissible": m.dismissible if m.dismissible is not None else True,
             "render_props": m.render_props,
         }
         for m in winners
     ]
 ```
 
-Both example messages set `priority`. The sort above uses it. What to do when `priority` is missing is still TBD.
+Invalid or missing required fields fail closed: the message is skipped, and the page does not crash. Missing `priority` sorts as 100.
 
 Worked example. One page, location limit 2, `main-top` limit 2, `sidebar` limit 1. Four messages that already match, in sort order. A and B are `main-top`. C and D are `sidebar`. A–D are not files in this folder, and `sidebar` is not one of the example surfaces.
 
@@ -64,6 +66,32 @@ Worked example. One page, location limit 2, `main-top` limit 2, `sidebar` limit 
 - The location limit is now reached, so selection stops. C is skipped even though `sidebar` still had room (0/1). D is not considered.
 
 Result: `[A, B]`.
+
+## Component registry
+
+`component` is a universal name, never a framework path. Each wrapper keeps a registry from that name to the real component: a React component, a server template, or a mobile view. It passes `render_props` as the props, plus `id`, `dismissible`, `onDismiss`, and `onImpression`.
+
+```python
+registry = {
+    "Banner": Banner,
+    "OnboardingModal": OnboardingModal,
+}
+
+def render(item):
+    Component = registry.get(item.get("component"))
+    if Component is None or item.get("render_props") is None:
+        log.warning("nudges: missing or unregistered component for %s", item.get("id"))
+        return None  # fail closed: render nothing
+    return Component(
+        **item["render_props"],
+        id=item["id"],
+        dismissible=item["dismissible"],
+        onDismiss=lambda: dismiss(item["id"]),
+        onImpression=lambda: impression(item["id"]),  # wrapper dedupes per decide() result
+    )
+```
+
+A missing or unregistered name renders nothing. The wrapper logs a warning. A CI check can flag names that are not in the registry.
 
 ## App layout
 
@@ -80,16 +108,20 @@ Use `audiences.go` in a Go app and `audiences.ts` in a TypeScript app, instead o
 
 ## Fields
 
+Invalid or missing required fields fail closed. The message is skipped and never crashes the page.
+
 | Field | Required? | Default | Read by | Notes |
 | --- | --- | --- | --- | --- |
-| `location` | TBD | TBD | Engine | Argument to `decide(location, ctx)`. Not on each result item. Cap is `location_limits` in config; unlisted locations default to 1. Examples: `home`, `get-started`. |
-| `surface` | TBD | TBD | Engine | On each result item. The host filters by it to render each slot. Not merged into component props. Cap is `surface_limits` in config; unlisted surfaces default to 1. Examples: `main-top`, `modal`. |
-| `active.from` | TBD | TBD | Engine | UTC. Midnight if the value has no time. Whether the field may be omitted is not stated. |
-| `active.to` | No | No end | Engine | UTC. Midnight if the value has no time. Omitting it means the message does not end. The modal omits it. |
-| `priority` | TBD | TBD | Engine | Sort key is `priority` ascending, then `id` ascending. Lower numbers win. The id that sorts first is the older filename. |
-| `dismissible` | TBD | TBD | Engine and renderer | The engine records dismissals. Each `decide()` item includes it next to `render_props`. The wrapper passes `onDismiss`, which calls `dismiss(id)`. The component does not wire that itself. |
-| `max_impressions` | No | Unlimited | Engine and renderer | Leaving it out means unlimited. The count is impressions the renderer reported with `impression(id)`. The wrapper counts at most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. `decide()` only reads that count; a message at the cap is not a candidate. |
-| `audience.require_all` | TBD | TBD | Engine | Audience function names that must all be true. Both examples set it. The default when omitted is not stated. |
-| `audience.require_one_of` | No | TBD | Engine | At least one must be true. The modal omits it. The default when omitted is not stated. |
-| `audience.exclude` | No | TBD | Engine | Any true name excludes the message. The modal omits it. The default when omitted is not stated. |
-| `render_props` | TBD | TBD | Renderer | Opaque to the core and passed through on each item. The wrapper spreads these fields onto the component and adds `id`, `dismissible`, `onImpression`, and `onDismiss`. |
+| `location` | Yes | — | Engine | Missing = fail closed: the message is never returned or rendered. Argument to `decide(location, ctx)`. Not on each result item. Cap is `location_limits` in config; unlisted locations default to 1. Examples: `home`, `get-started`. |
+| `surface` | Yes | — | Engine | Missing = fail closed. On each result item. The host filters by it to render each slot. Not merged into component props. Cap is `surface_limits` in config; unlisted surfaces default to 1. Examples: `main-top`, `modal`. |
+| `component` | Yes | — | Renderer (wrapper) | Universal name, never a framework path. Examples: `Banner`, `OnboardingModal`. The wrapper registry maps it to the real component. Missing or unregistered = fail closed: render nothing, and the wrapper logs a warning. CI can flag unregistered names. Not merged into component props. |
+| `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. |
+| `active.to` | No | Live forever | Engine | UTC. A date with no time is midnight UTC. Exclusive at that exact instant. The modal omits it. |
+| `priority` | No | 100 | Engine | Lower numbers win. Ties go to the older filename (`id` ascending). |
+| `dismissible` | No | true | Engine and renderer | The engine records dismissals. Each `decide()` item includes it. The wrapper passes `onDismiss`, which calls `dismiss(id)`. |
+| `max_impressions` | No | Unlimited | Engine and renderer | The count is impressions the renderer reported with `impression(id)`. The wrapper counts at most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. `decide()` only reads that count; a message at the cap is not a candidate. |
+| `audience` | No | Everyone matches | Engine | Omitted entirely means everyone matches. |
+| `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
+| `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
+| `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
+| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. Opaque to the core and passed through. The wrapper spreads these fields and adds `id`, `dismissible`, `onDismiss`, and `onImpression`. |

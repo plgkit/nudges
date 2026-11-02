@@ -1,16 +1,17 @@
-location: "home"
-surface: "main-top"
-active: # UTC | midnight by default
+location: "home" # Required. Missing = fail closed: the message is never returned.
+surface: "main-top" # Required. Missing = fail closed.
+active: # UTC. A date with no time is midnight UTC. Missing from = active immediately. Missing to = live forever. to is exclusive at that instant.
   from: "2026-10-30"
   to: "2050-01-28"
-priority: 5 # Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
-dismissible: true # The engine records dismissals. Each decide() item includes it alongside render_props so the renderer knows to show a close button and calls dismiss(id).
+priority: 5 # Optional, default 100. Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
+dismissible: true # Optional, default true. The engine records dismissals. Each decide() item includes it so the wrapper can pass onDismiss.
 max_impressions: 5 # Count of renderer-reported impressions. decide() only reads it.
-audience: # These call functions the developer has defined in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
+audience: # Optional. Omitted entirely means everyone matches. Omitted require_all or require_one_of passes; omitted exclude excludes no one. Functions live in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
   require_all: [is_human, is_adult]
   require_one_of: [is_usa_resident, is_uk_resident]
   exclude: [is_staff, is_duck]
-render_props: # This can be whatever your renderer expects eg. React component props
+component: "Banner" # Required universal name, never a framework path. The wrapper registry maps it to the real component.
+render_props: # Required. Props for that component. Opaque to the core. Missing = fail closed.
   title: "Supersuit v0 available in beta."
   body: "The people's first supersuit brings you levitation, accelerated movements, and more. Take it to new heights."
   primary_cta:

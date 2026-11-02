@@ -1,13 +1,14 @@
-location: "get-started"
-surface: "modal"
-active: # UTC | midnight by default
+location: "get-started" # Required. Missing = fail closed: the message is never returned.
+surface: "modal" # Required. Missing = fail closed.
+active: # UTC. A date with no time is midnight UTC. Missing from = active immediately. Missing to = live forever. to is exclusive at that instant.
   from: "2026-10-30"
-priority: 1 # Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
-dismissible: true # The engine records dismissals. Each decide() item includes it alongside render_props so the renderer knows to show a close button and calls dismiss(id).
+priority: 1 # Optional, default 100. Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
+dismissible: true # Optional, default true. The engine records dismissals. Each decide() item includes it so the wrapper can pass onDismiss.
 max_impressions: 5 # Count of renderer-reported impressions. decide() only reads it.
-audience: # These call functions the developer has defined in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
+audience: # Optional. Omitted entirely means everyone matches. Omitted require_all or require_one_of passes; omitted exclude excludes no one. Functions live in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
   require_all: [has_active_supersuit_subscription]
-render_props: # This can be whatever your renderer expects eg. React component props
+component: "OnboardingModal" # Required universal name, never a framework path. The wrapper registry maps it to the real component.
+render_props: # Required. Props for that component. Opaque to the core. Missing = fail closed.
   slides:
     - title: "It's time to suit up"
       subtitle: "You need to believe, to achieve."
