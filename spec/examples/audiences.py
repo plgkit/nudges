@@ -1,6 +1,6 @@
 """Example audience functions for spec/examples/messages/*.yml.
 
-In your app, this file lives at plgkit/audiences.py.
+In your app, this file lives at plgkit/nudges/audiences.py.
 Each function's name is what a message's `audience` lists in YAML.
 PLGKit calls each one with the same `context` you pass to decide(),
 and sends only the True/False result to the core. Your user object

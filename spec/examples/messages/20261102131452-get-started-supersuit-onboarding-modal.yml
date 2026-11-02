@@ -5,13 +5,13 @@ active: # UTC | midnight by default
 priority: 1 # Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
 dismissible: true # The engine records dismissals; decide() returns it alongside render_props so the renderer knows to show a close button and calls dismiss(id).
 max_impressions: 5
-audience: # These call functions the developer has defined in plgkit/audiences.py (or plgkit/audiences.ts for TypeScript)
+audience: # These call functions the developer has defined in plgkit/nudges/audiences.py (or plgkit/nudges/audiences.ts for TypeScript)
   require_all: [has_active_supersuit_subscription]
 render_props: # This can be whatever your renderer expects eg. React component props
   slides:
     - title: "It's time to suit up"
       subtitle: "You need to believe, to achieve."
-      asset: "20261102131452-get-started-supersuit-onboarding-modal/slide_1.png" # In your static directory; resolved against assets_base_url in plgkit/config.yml
+      asset: "20261102131452-get-started-supersuit-onboarding-modal/slide_1.png" # In your static directory; resolved against assets_base_url in plgkit/nudges/config.yml
       primary_cta:
         text: "Activate your suit"
         url: "https://supersuit.tech/examples/activate-your-suit"
