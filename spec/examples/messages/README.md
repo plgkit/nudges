@@ -14,7 +14,9 @@ Developers never write the ID in YAML. It always comes from the filename.
 
 Each item has `id` (the filename without `.yml`), `surface`, `dismissible`, and `render_props`.
 
-The host filters that list by `surface` and renders each slot. For each item, the wrapper merges `id` and `dismissible` into the component's props alongside `render_props`. It passes `id`, `dismissible`, and every field inside `render_props` as the component's own props. A dumb component can render the close X when `dismissible` is true and call `dismiss(id)` or `onDismiss(id)`. The wrapper does not merge `surface` into those props.
+The host filters that list by `surface` and renders each slot. For each item, the wrapper merges `id`, `dismissible`, `onImpression`, and `onDismiss` into the component's props alongside `render_props`. A dumb component never wires this itself. The wrapper does not merge `surface` into those props.
+
+`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. When the component actually mounts or becomes visible, the wrapper calls `onImpression` once, and that calls `impression(id)`, mirroring `onDismiss` calling `dismiss(id)`. The close control calls `onDismiss`. The component does not wire either call. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
 
 ## Limits and selection
 
@@ -28,7 +30,7 @@ def decide(location, ctx):
         if m.location == location
         and is_active(m, now_utc)  # UTC; a date with no time is midnight
         and not dismissed(ctx.user, m.id)
-        and under_max_impressions(ctx.user, m)  # missing max_impressions = unlimited
+        and under_max_impressions(ctx.user, m)  # read the count only; missing = unlimited
         and audience_matches(m, ctx)
     ]
     candidates.sort(key=lambda m: (m.priority, m.id))  # lower priority, then older id
@@ -42,7 +44,6 @@ def decide(location, ctx):
             continue  # only this surface is full; skip and continue
         winners.append(m)
         per_surface[m.surface] = per_surface.get(m.surface, 0) + 1
-        record_impression(ctx.user, m.id)
     return [
         {
             "id": m.id,
@@ -86,9 +87,9 @@ Use `audiences.go` in a Go app and `audiences.ts` in a TypeScript app, instead o
 | `active.from` | TBD | TBD | Engine | UTC. Midnight if the value has no time. Whether the field may be omitted is not stated. |
 | `active.to` | No | No end | Engine | UTC. Midnight if the value has no time. Omitting it means the message does not end. The modal omits it. |
 | `priority` | TBD | TBD | Engine | Sort key is `priority` ascending, then `id` ascending. Lower numbers win. The id that sorts first is the older filename. |
-| `dismissible` | TBD | TBD | Engine and renderer | The engine records dismissals. Each `decide()` item includes it next to `render_props`. The wrapper merges it into component props so the component can show a close button and call `dismiss(id)` or `onDismiss(id)`. |
-| `max_impressions` | No | Unlimited | Engine | Leaving it out means unlimited. A message at the cap is not a candidate. |
+| `dismissible` | TBD | TBD | Engine and renderer | The engine records dismissals. Each `decide()` item includes it next to `render_props`. The wrapper passes `onDismiss`, which calls `dismiss(id)`. The component does not wire that itself. |
+| `max_impressions` | No | Unlimited | Engine and renderer | Leaving it out means unlimited. The count is impressions the renderer reported with `impression(id)`. `decide()` only reads that count; a message at the cap is not a candidate. |
 | `audience.require_all` | TBD | TBD | Engine | Audience function names that must all be true. Both examples set it. The default when omitted is not stated. |
 | `audience.require_one_of` | No | TBD | Engine | At least one must be true. The modal omits it. The default when omitted is not stated. |
 | `audience.exclude` | No | TBD | Engine | Any true name excludes the message. The modal omits it. The default when omitted is not stated. |
-| `render_props` | TBD | TBD | Renderer | Opaque to the core and passed through on each item. The wrapper spreads these fields onto the component and adds `id` and `dismissible`. |
+| `render_props` | TBD | TBD | Renderer | Opaque to the core and passed through on each item. The wrapper spreads these fields onto the component and adds `id`, `dismissible`, `onImpression`, and `onDismiss`. |

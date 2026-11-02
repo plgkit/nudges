@@ -4,7 +4,7 @@ active: # UTC | midnight by default
   from: "2026-10-30"
 priority: 1 # Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
 dismissible: true # The engine records dismissals. Each decide() item includes it alongside render_props so the renderer knows to show a close button and calls dismiss(id).
-max_impressions: 5
+max_impressions: 5 # Count of renderer-reported impressions. decide() only reads it.
 audience: # These call functions the developer has defined in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
   require_all: [has_active_supersuit_subscription]
 render_props: # This can be whatever your renderer expects eg. React component props
