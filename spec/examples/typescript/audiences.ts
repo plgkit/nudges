@@ -2,7 +2,7 @@
 //
 // In your app, this file lives at plgkit/nudges/audiences.ts.
 // Each function's name is what a message's `audience` lists in YAML.
-// PLGKit calls each one with the same `context` you pass to decide(),
+// PLGKit calls each one with the same `context` you pass to decide(location, ctx),
 // and sends only the true/false result to the core. Your user object
 // never leaves your app.
 

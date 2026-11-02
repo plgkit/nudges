@@ -2,7 +2,7 @@
 
 In your app, this file lives at plgkit/nudges/audiences.py.
 Each function's name is what a message's `audience` lists in YAML.
-PLGKit calls each one with the same `context` you pass to decide(),
+PLGKit calls each one with the same `context` you pass to decide(location, ctx),
 and sends only the True/False result to the core. Your user object
 never leaves your app.
 """

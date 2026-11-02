@@ -2,7 +2,7 @@
 //
 // In your app, this file lives at plgkit/nudges/audiences.go.
 // The Audiences map keys are what a message's audience lists in YAML.
-// PLGKit calls each one with the same context you pass to decide,
+// PLGKit calls each one with the same context you pass to decide(location, ctx),
 // and sends only the true/false result to the core. Your user object
 // never leaves your app.
 package audiences

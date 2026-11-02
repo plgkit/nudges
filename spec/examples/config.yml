@@ -1,3 +1,13 @@
 # In your app, this file lives at plgkit/nudges/config.yml. It is Nudges-only.
 # `asset` paths in render_props are resolved against assets_base_url, since that depends on your server.
 assets_base_url: "/static/nudges/"
+
+# Max winners decide() may return for a location. A location not listed defaults to 1.
+location_limits:
+  home: 2
+  get-started: 1
+
+# Max winners on one surface within that location. A surface not listed defaults to 1.
+surface_limits:
+  main-top: 2
+  modal: 1

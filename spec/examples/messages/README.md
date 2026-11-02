@@ -10,11 +10,59 @@ Developers never write the ID in YAML. It always comes from the filename.
 
 ## decide()
 
-`decide()` returns one message, or `null` when nothing matches. [`../decide-response.json`](../decide-response.json) is the match for `20261030183743-home-supersuit-launch-banner`. The `null` result is not in that file.
+`decide(location, ctx)` returns a list of winners. The list is empty when nothing matches. [`../decide-response.json`](../decide-response.json) is a `home` call that returns the banner. That file is a JSON array. The banner is the only example message at `home`, so the list has one item.
 
-The result carries `id` (the filename without `.yml`), `surface`, `dismissible`, and `render_props`.
+Each item has `id` (the filename without `.yml`), `surface`, `dismissible`, and `render_props`.
 
-The wrapper merges `id` and `dismissible` into the component's props alongside `render_props`. It passes `id`, `dismissible`, and every field inside `render_props` as the component's own props. A dumb component can render the close X when `dismissible` is true and call `dismiss(id)` or `onDismiss(id)`. `surface` stays on the `decide()` result so the host knows where to mount the component. The wrapper does not merge `surface` into those props.
+The host filters that list by `surface` and renders each slot. For each item, the wrapper merges `id` and `dismissible` into the component's props alongside `render_props`. It passes `id`, `dismissible`, and every field inside `render_props` as the component's own props. A dumb component can render the close X when `dismissible` is true and call `dismiss(id)` or `onDismiss(id)`. The wrapper does not merge `surface` into those props.
+
+## Limits and selection
+
+Limits live in `plgkit/nudges/config.yml` (`location_limits` and `surface_limits`), not in message files, so messages cannot disagree about a page's cap. A location or surface that is not listed defaults to 1.
+
+```python
+def decide(location, ctx):
+    location_limit = location_limits.get(location, 1)
+    candidates = [
+        m for m in messages
+        if m.location == location
+        and is_active(m, now_utc)  # UTC; a date with no time is midnight
+        and not dismissed(ctx.user, m.id)
+        and under_max_impressions(ctx.user, m)  # missing max_impressions = unlimited
+        and audience_matches(m, ctx)
+    ]
+    candidates.sort(key=lambda m: (m.priority, m.id))  # lower priority, then older id
+    winners = []
+    per_surface = {}
+    for m in candidates:
+        if len(winners) >= location_limit:
+            break  # location is full; stop
+        surface_limit = surface_limits.get(m.surface, 1)
+        if per_surface.get(m.surface, 0) >= surface_limit:
+            continue  # only this surface is full; skip and continue
+        winners.append(m)
+        per_surface[m.surface] = per_surface.get(m.surface, 0) + 1
+        record_impression(ctx.user, m.id)
+    return [
+        {
+            "id": m.id,
+            "surface": m.surface,
+            "dismissible": m.dismissible,
+            "render_props": m.render_props,
+        }
+        for m in winners
+    ]
+```
+
+Both example messages set `priority`. The sort above uses it. What to do when `priority` is missing is still TBD.
+
+Worked example. One page, location limit 2, `main-top` limit 2, `sidebar` limit 1. Four messages that already match, in sort order. A and B are `main-top`. C and D are `sidebar`. A–D are not files in this folder, and `sidebar` is not one of the example surfaces.
+
+- Take A (location 0/2, `main-top` 0/2).
+- Take B (location 1/2, `main-top` 1/2).
+- The location limit is now reached, so selection stops. C is skipped even though `sidebar` still had room (0/1). D is not considered.
+
+Result: `[A, B]`.
 
 ## App layout
 
@@ -33,14 +81,14 @@ Use `audiences.go` in a Go app and `audiences.ts` in a TypeScript app, instead o
 
 | Field | Required? | Default | Read by | Notes |
 | --- | --- | --- | --- | --- |
-| `location` | TBD | TBD | Engine | Not returned by `decide()`. Examples: `home`, `get-started`. |
-| `surface` | TBD | TBD | Engine | Returned by `decide()` so the host knows where to mount. Not merged into component props. Examples: `main-top`, `modal`. |
+| `location` | TBD | TBD | Engine | Argument to `decide(location, ctx)`. Not on each result item. Cap is `location_limits` in config; unlisted locations default to 1. Examples: `home`, `get-started`. |
+| `surface` | TBD | TBD | Engine | On each result item. The host filters by it to render each slot. Not merged into component props. Cap is `surface_limits` in config; unlisted surfaces default to 1. Examples: `main-top`, `modal`. |
 | `active.from` | TBD | TBD | Engine | UTC. Midnight if the value has no time. Whether the field may be omitted is not stated. |
 | `active.to` | No | No end | Engine | UTC. Midnight if the value has no time. Omitting it means the message does not end. The modal omits it. |
-| `priority` | TBD | TBD | Engine | Lower numbers win. Ties go to the filename that sorts first, which is the older message. |
-| `dismissible` | TBD | TBD | Engine and renderer | The engine records dismissals. `decide()` returns it next to `render_props`. The wrapper merges it into component props so the component can show a close button and call `dismiss(id)` or `onDismiss(id)`. |
-| `max_impressions` | No | Unlimited | Engine | Leaving it out means unlimited. |
+| `priority` | TBD | TBD | Engine | Sort key is `priority` ascending, then `id` ascending. Lower numbers win. The id that sorts first is the older filename. |
+| `dismissible` | TBD | TBD | Engine and renderer | The engine records dismissals. Each `decide()` item includes it next to `render_props`. The wrapper merges it into component props so the component can show a close button and call `dismiss(id)` or `onDismiss(id)`. |
+| `max_impressions` | No | Unlimited | Engine | Leaving it out means unlimited. A message at the cap is not a candidate. |
 | `audience.require_all` | TBD | TBD | Engine | Audience function names that must all be true. Both examples set it. The default when omitted is not stated. |
 | `audience.require_one_of` | No | TBD | Engine | At least one must be true. The modal omits it. The default when omitted is not stated. |
 | `audience.exclude` | No | TBD | Engine | Any true name excludes the message. The modal omits it. The default when omitted is not stated. |
-| `render_props` | TBD | TBD | Renderer | Opaque to the core and passed through. The wrapper spreads these fields onto the component and adds `id` and `dismissible`. |
+| `render_props` | TBD | TBD | Renderer | Opaque to the core and passed through on each item. The wrapper spreads these fields onto the component and adds `id` and `dismissible`. |
