@@ -1,0 +1,18 @@
+location: "get-started"
+surface: "modal"
+active: # UTC | midnight by default
+  from: "2026-10-30"
+priority: 1 # When multiple in-product messages are given the same priority, the file name/id that comes first alphabetically will be the tie breaker
+max_impressions: 5
+audience: # These call functions the developer has defined in our predefined TBD location
+  require_all: [has_active_supersuit_subscription]
+render_props: # This can be whatever your renderer expects eg. React component props
+  dismissible: true
+  slide_1:
+    title: "It's time suit up"
+    subtitle: "You need to believe, to achieve."
+    asset: "get-started-supersuit-onboarding-modal/slide_1.png"
+    primary_cta:
+      text: "Activate your suit"
+      url: "https://supersuit.tech/examples/activate-your-suit"
+      dismiss_on_click: true
