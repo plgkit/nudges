@@ -4,13 +4,13 @@ active: # UTC | midnight by default
   from: "2026-10-30"
   to: "2050-01-28"
 priority: 5 # When multiple in-product messages are given the same priority, the file name/id that comes first alphabetically will be the tie breaker
-dismissible: true
 max_impressions: 5
 audience: # These call functions the developer has defined in our predefined TBD location
   require_all: [is_human, is_adult]
   require_one_of: [is_usa_resident, is_uk_resident] 
   exclude: [is_staff, is_duck]
-content:
+render_props:
+  dismissible: true
   title: "Supersuit v0 available in beta."
   body: "The peoples' first supersuit brings you levitation, accelerated movements, and more. Take it to new heights."
   primary_cta:
