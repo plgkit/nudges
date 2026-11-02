@@ -16,7 +16,7 @@ Each item has `id` (the filename without `.yml`), `surface`, `dismissible`, and 
 
 The host filters that list by `surface` and renders each slot. For each item, the wrapper merges `id`, `dismissible`, `onImpression`, and `onDismiss` into the component's props alongside `render_props`. A dumb component never wires this itself. The wrapper does not merge `surface` into those props.
 
-`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. When the component actually mounts or becomes visible, the wrapper calls `onImpression` once, and that calls `impression(id)`, mirroring `onDismiss` calling `dismiss(id)`. The close control calls `onDismiss`. The component does not wire either call. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
+`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The wrapper dedupes impressions: `impression(id)` fires at most once per message per page view, one `decide()` result, no matter how many times the component re-renders or remounts. A new page view, a new `decide()` call such as navigation or reload, can count again. The wrapper owns that dedupe. Dumb components stay unaware of it. The first time that result's component actually mounts or becomes visible, the wrapper calls `onImpression`, and that calls `impression(id)`, mirroring `onDismiss` calling `dismiss(id)`. The close control calls `onDismiss`. The component does not wire either call. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
 
 ## Limits and selection
 
@@ -88,7 +88,7 @@ Use `audiences.go` in a Go app and `audiences.ts` in a TypeScript app, instead o
 | `active.to` | No | No end | Engine | UTC. Midnight if the value has no time. Omitting it means the message does not end. The modal omits it. |
 | `priority` | TBD | TBD | Engine | Sort key is `priority` ascending, then `id` ascending. Lower numbers win. The id that sorts first is the older filename. |
 | `dismissible` | TBD | TBD | Engine and renderer | The engine records dismissals. Each `decide()` item includes it next to `render_props`. The wrapper passes `onDismiss`, which calls `dismiss(id)`. The component does not wire that itself. |
-| `max_impressions` | No | Unlimited | Engine and renderer | Leaving it out means unlimited. The count is impressions the renderer reported with `impression(id)`. `decide()` only reads that count; a message at the cap is not a candidate. |
+| `max_impressions` | No | Unlimited | Engine and renderer | Leaving it out means unlimited. The count is impressions the renderer reported with `impression(id)`. The wrapper counts at most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. `decide()` only reads that count; a message at the cap is not a candidate. |
 | `audience.require_all` | TBD | TBD | Engine | Audience function names that must all be true. Both examples set it. The default when omitted is not stated. |
 | `audience.require_one_of` | No | TBD | Engine | At least one must be true. The modal omits it. The default when omitted is not stated. |
 | `audience.exclude` | No | TBD | Engine | Any true name excludes the message. The modal omits it. The default when omitted is not stated. |
