@@ -9,7 +9,7 @@ audience: # Optional. Omitted entirely means everyone matches. Omitted require_a
   require_all: [is_human, is_adult]
   require_one_of: [is_usa_resident, is_uk_resident]
   exclude: [is_staff, is_duck]
-component: "Banner" # Required universal name, never a framework path. The wrapper registry maps it to the real component.
+component: "Banner" # Required universal name, never a framework path. The renderer registry maps it to the real component.
 render_props: # Required. {} is valid. Opaque to the core and passed through as props. Missing = fail closed.
   dismissible: true # Presentation only: show a close control. Does not gate dismiss(id).
   title: "Supersuit v0 available in beta."

@@ -14,11 +14,9 @@ Developers never write the ID in YAML. It always comes from the filename.
 
 Each item has `id` (the filename without `.yml`), `surface`, `component`, and `render_props`.
 
-The host filters that list by `surface` and renders each slot. The wrapper looks up `component` in its registry and passes `render_props` as the component's props. It does not merge anything into those props.
+The host filters that list by `surface` and renders each slot. A renderer resolves `component` and passes `render_props` as the component's props. It does not merge anything into those props. The contract is in [the renderer contract](../../renderers.md).
 
-`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The developer calls `impression(id)` once when the message is shown, using the `id` on the `decide()` item. Re-renders and remounts do not count as a second impression. A new page view (a new `decide()` call, such as navigation or reload) can count again. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`. The developer calls `dismiss(id)` the same way. The backend accepts that for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: the renderer uses it to decide whether to show a close control.
-
-**Open question:** who enforces the once-per-page-view dedupe now that the developer calls `impression(id)` directly?
+`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The renderer helper calls `impression(id)` once per message per page view and enforces that dedupe. Re-renders and remounts do not count. A new `decide()` call, such as navigation or reload, can count again. Calling `impression(id)` yourself makes dedupe your responsibility. `dismiss(id)` is accepted for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: whether to show a close control.
 
 ## Limits and selection
 
@@ -68,27 +66,9 @@ Worked example. One page, location limit 2, `main-top` limit 2, `sidebar` limit 
 
 Result: `[A, B]`.
 
-## Component registry
+## Renderers
 
-`component` is a universal name, never a framework path. Each wrapper keeps a registry from that name to the real component: a React component, a server template, or a mobile view. It passes `render_props` through as the props and injects nothing.
-
-```python
-registry = {
-    "Banner": Banner,
-    "OnboardingModal": OnboardingModal,
-}
-
-def render(item):
-    Component = registry.get(item.get("component"))
-    if Component is None or item.get("render_props") is None:
-        log.warning("nudges: missing or unregistered component for %s", item.get("id"))
-        return None  # fail closed: render nothing
-    return Component(**item["render_props"])
-```
-
-The developer calls `impression(item["id"])` once when the message is shown, and `dismiss(item["id"])` when it is dismissed. Both use the `id` on the `decide()` item. `dismiss(id)` is accepted for every nudge.
-
-A missing or unregistered name renders nothing. The wrapper logs a warning. A CI check can flag names that are not in the registry.
+`component` is a universal name, never a framework path. Renderers are separate packages. The contract, including the registry, fail-closed rendering, and the `useNudge` helper, is in [spec/renderers.md](../../renderers.md).
 
 ## App layout
 
@@ -111,13 +91,13 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | --- | --- | --- | --- | --- |
 | `location` | Yes | — | Engine | Missing = fail closed: the message is never returned or rendered. Argument to `decide(location, ctx)`. Not on each result item. Cap is `location_limits` in config; unlisted locations default to 1. Examples: `home`, `get-started`. |
 | `surface` | Yes | — | Engine | Missing = fail closed. On each result item. The host filters by it to render each slot. Not merged into component props. Cap is `surface_limits` in config; unlisted surfaces default to 1. Examples: `main-top`, `modal`. |
-| `component` | Yes | — | Renderer (wrapper) | Universal name, never a framework path. Examples: `Banner`, `OnboardingModal`. The wrapper registry maps it to the real component. Missing or unregistered = fail closed: render nothing, and the wrapper logs a warning. CI can flag unregistered names. Not merged into component props. |
+| `component` | Yes | — | Renderer | Universal name, never a framework path. Examples: `Banner`, `OnboardingModal`. The renderer registry maps it to a real component, template, or view. Missing or unregistered = fail closed: render nothing, and the renderer logs a warning. CI can flag unregistered names. Not merged into component props. See [the renderer contract](../../renderers.md). |
 | `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. |
 | `active.to` | No | Live forever | Engine | UTC. A date with no time is midnight UTC. Exclusive at that exact instant. The modal omits it. |
 | `priority` | No | 100 | Engine | Lower numbers win. Ties go to the older filename (`id` ascending). |
-| `max_impressions` | No | Unlimited | Engine and renderer | The count is impressions the developer reported with `impression(id)`. At most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. Who enforces that dedupe is the open question under `decide()`. `decide()` only reads the count; a message at the cap is not a candidate. |
+| `max_impressions` | No | Unlimited | Engine and renderer | The count is reported `impression(id)` calls. At most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. The renderer helper enforces that dedupe. A direct `impression(id)` call makes dedupe the caller's job. `decide()` only reads the count; a message at the cap is not a candidate. |
 | `audience` | No | Everyone matches | Engine | Omitted entirely means everyone matches. |
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
 | `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
-| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core and passed through as the component props. The wrapper adds no keys. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. |
+| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core. Passed through as the component props. The renderer adds no keys. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. |
