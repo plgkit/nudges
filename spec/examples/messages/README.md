@@ -32,7 +32,7 @@ def decide(location, ctx):
         and is_active(m, now_utc)  # UTC midnight if date-only; from inclusive; to exclusive; missing from = now; missing to = forever
         and not dismissed(ctx, m)  # omitted dismiss_scope = any dismissal for this user_id; else those keys must match ctx
         and under_max_impressions(ctx, m)  # count impression events for this user_id; missing max = unlimited
-        and audience_matches(m, ctx)  # omitted audience = everyone
+        and audience_matches(m, ctx)  # omitted = everyone; unknown name fails closed (skip). plgkit validate reports it
     ]
     candidates.sort(key=lambda m: (m.priority if m.priority is not None else 100, m.id))
     winners = []
@@ -97,7 +97,7 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `priority` | No | 100 | Engine | Lower numbers win. Ties go to the older filename (`id` ascending). |
 | `max_impressions` | No | Unlimited | Engine and renderer | The count is `impression(nudge_id, event)` calls for this `user_id`. At most one per message per `decide()` result. Re-renders and remounts do not count again. A new `decide()` call can. The renderer helper enforces that dedupe. A direct call makes dedupe the caller's job. `decide()` only reads the count; a message at the cap is not a candidate. |
 | `dismiss_scope` | No | Everywhere for that user | Engine | Flat list of event/ctx keys, for example `[organization_id]`. Omitted means a dismissal for that `user_id` applies everywhere. When set, `decide()` treats the message as dismissed only if a dismissal for that user has the same values for those keys. A dismiss event missing a scoped key is ignored (fail closed). If ctx is missing a key listed in dismiss_scope, no dismissal matches, so the message can show. This is intentional (e.g. a page outside any organization). The modal sets `[organization_id]`. |
-| `audience` | No | Everyone matches | Engine | Omitted entirely means everyone matches. |
+| `audience` | No | Everyone matches | Engine | Omitted entirely means everyone matches. An audience name not present in the audience map fails closed, so the message is skipped at runtime. `plgkit validate` (follow-up PR) must report an unknown audience name as an error. |
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
 | `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
