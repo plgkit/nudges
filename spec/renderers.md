@@ -5,15 +5,15 @@ A renderer is a separate importable package. It is not a core plugin. Anyone can
 A renderer must:
 
 - Keep a registry from the `component` string to a real component, template, or view.
-- Render the matching `decide()` item by passing `render_props` as its props. The item shape is `{ id, surface, component, render_props }`. Add no other props.
+- Render the matching `decide()` item by passing `nudge_id` and `render_props`. The item shape is `{ id, surface, component, render_props }`. `nudge_id` is `item.id`, the timestamp-prefixed filename. It is a separate prop, not a field in the message file and not written into `render_props`. React: `<Banner {...item.render_props} nudge_id={item.id} />`. A Python template helper and a mobile view wrapper receive `nudge_id` the same way. If `render_props` also contains `nudge_id`, the renderer's value wins.
 - Fail closed when `component` is missing or unregistered: render nothing and log a warning.
 
 It must also provide a per-framework helper. The helper exposes `dismiss()` and records at most one impression per message per page view. Re-renders and remounts do not count. A new `decide()` call, such as navigation or reload, can count again. The helper enforces that dedupe.
 
-The helper takes the message `id` from the `decide()` item. The renderer does not copy `id` into `render_props`. React, when that id is `props.id`:
+The helper takes `nudge_id`. React:
 
 ```jsx
-const { dismiss } = useNudge(props.id);
+const { dismiss } = useNudge(props.nudge_id);
 ```
 
 On the first mount for this page view, `useNudge` calls `impression(id)` once. `dismiss()` calls `dismiss(id)`. The backend accepts `dismiss(id)` for every nudge.

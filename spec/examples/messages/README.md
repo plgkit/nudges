@@ -14,7 +14,7 @@ Developers never write the ID in YAML. It always comes from the filename.
 
 Each item has `id` (the filename without `.yml`), `surface`, `component`, and `render_props`.
 
-The host filters that list by `surface` and renders each slot. A renderer resolves `component` and passes `render_props` as the component's props. It does not merge anything into those props. The contract is in [the renderer contract](../../renderers.md).
+The host filters that list by `surface` and renders each slot. A renderer resolves `component`, passes `nudge_id` from the item `id`, and spreads `render_props`. It does not write `nudge_id` into `render_props`. The contract is in [the renderer contract](../../renderers.md).
 
 `decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The renderer helper calls `impression(id)` once per message per page view and enforces that dedupe. Re-renders and remounts do not count. A new `decide()` call, such as navigation or reload, can count again. Calling `impression(id)` yourself makes dedupe your responsibility. `dismiss(id)` is accepted for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: whether to show a close control.
 
@@ -100,4 +100,4 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
 | `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
-| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core. Passed through as the component props. The renderer adds no keys. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. |
+| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core. Passed through as the component props, next to a separate `nudge_id`. Not written into `render_props`. If this object also has `nudge_id`, the renderer's value wins. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. |
