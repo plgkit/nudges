@@ -10,9 +10,9 @@ A renderer must:
 
 It must also provide a per-framework helper. React: `useNudgeTracking(props.nudge_id)` returns `{ click, dismiss }`. Python server templates: `nudge_tracking(nudge_id)` returns the same pair. The mobile nudge tracking wrapper does too. Impression is not returned. The helper records it automatically once per `decide()` result. Re-renders and remounts do not count. That dedupe resets on each new `decide()` result.
 
-The renderer accepts the page's context once, for example `<NudgeHost context={{ organization_id: "acme" }} />` around the `decide()` result. Python `nudge_tracking` and the mobile nudge tracking wrapper take that same context once. The helper includes it on every call. Components do not pass organization ids.
+The renderer takes `endpoint` (a developer-chosen URL) and the page's `context` once, for example `<NudgeHost endpoint="/api/nudges/events" context={{ organization_id: "acme" }} />` around the `decide()` result. Python `nudge_tracking` and the mobile nudge tracking wrapper take that same `endpoint` and `context` once. PLGKit never defines the route. Components do not pass organization ids.
 
-Every helper call goes to one developer backend endpoint:
+`useNudgeTracking`, `nudge_tracking`, and the mobile nudge tracking wrapper POST JSON `{ nudge_id, action, context }` to that URL:
 
 ```json
 { "nudge_id": "...", "action": "impression|click|dismiss", "context": { "organization_id": "acme" } }
