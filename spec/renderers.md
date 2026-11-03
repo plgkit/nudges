@@ -1,42 +1,60 @@
 # Renderer contract
 
-A renderer is a separate importable package. It is not a core plugin. Anyone can publish one against this contract. PLGKit ships a few in the nudges repo. React is first. Server templates and mobile come later.
+A renderer is its own package. It is not built into PLGKit, and anyone can publish one. PLGKit ships a few in this repo: React first, then server page templates and phone apps.
 
-A renderer must:
-
-- Keep a registry from the `component` string to a real component, template, or view.
-- Render the matching `decide()` item by passing `nudge_id` and `render_props`. The item shape is `{ id, surface, component, render_props }`. `nudge_id` is `item.id`, the timestamp-prefixed filename. It is a separate prop, not a field in the message file and not written into `render_props`. React: `<Banner {...item.render_props} nudge_id={item.id} />`. The Python `nudge_tracking` helper and the mobile nudge tracking wrapper receive `nudge_id` the same way. If `render_props` also contains `nudge_id`, the renderer's value wins. Renderers pass `render_props` through unchanged and never read `assets_base_url`. Components receive finished URLs.
-- Fail closed when `component` is missing or unregistered: render nothing and log a warning.
-
-It must also provide a per-framework helper. React: `useNudgeTracking(props.nudge_id)` returns `{ click, dismiss }`. Python server templates: `nudge_tracking(nudge_id)` returns the same pair. The mobile nudge tracking wrapper does too. Impression is not returned. The helper records it automatically once per `decide()` result. Re-renders and remounts do not count. That dedupe resets on each new `decide()` result.
-
-The renderer takes `endpoint` (a developer-chosen URL) and the page's `context` once, for example `<NudgeHost endpoint="/api/nudges/events" context={{ organization_id: "acme" }} />` around the `decide()` result. Python `nudge_tracking` and the mobile nudge tracking wrapper take that same `endpoint` and `context` once. PLGKit never defines the route. Components do not pass organization ids.
-
-`useNudgeTracking`, `nudge_tracking`, and the mobile nudge tracking wrapper POST JSON `{ nudge_id, action, context }` to that URL:
-
-```json
-{ "nudge_id": "...", "action": "impression|click|dismiss", "context": { "organization_id": "acme" } }
-```
-
-`context` is an optional flat map of page-level keys the front end knows. New keys can be added later without changing this shape. `user_id` always comes from the backend session and is never accepted from the browser. Ignore it if it is present in `context`. The backend verifies each context key before using it, and drops any key it cannot verify (fail closed). It then builds the flat event `{ user_id, ...verified context }` and calls the matching PLGKit function. A `dismiss_on_click` control calls `click`, then `dismiss`. A missing `user_id` fails closed: the event is ignored and never throws into the page.
-
-```python
-def record(body, session):
-    context = body.get("context") or {}
-    verified = {}
-    org = context.get("organization_id")
-    if org is not None and session.user_belongs_to(org):
-        verified["organization_id"] = org  # otherwise drop it; drop any other unverified key too
-    event = {"user_id": session.user_id, **verified}  # user_id from the session only
-    {"impression": plgkit.impression, "click": plgkit.click, "dismiss": plgkit.dismiss}[body["action"]](
-        body["nudge_id"], event
-    )
-```
-
-React:
+## Usage
 
 ```jsx
-const { click, dismiss } = useNudgeTracking(props.nudge_id);
+<NudgeProvider
+  location="home"
+  endpoint="/api/nudges/events"
+  context={{ organization_id: "acme" }}
+  registry={{ Banner }}
+>
+  <header>
+    <div>
+      <NudgeSurface surface="main-top" />
+    </div>
+  </header>
+</NudgeProvider>
+
+function Banner(props) {
+  const { click, dismiss } = useNudgeTracking(props.nudge_id);
+}
 ```
 
-The helper is optional. From your backend you may call `impression`, `dismiss`, and `click` yourself with an `event` of `user_id` from the session plus verified context. Then the once-per-`decide()`-result dedupe is your responsibility. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
+The provider calls `decide(location)` once, so the page limits cover every slot. Each item is `{ id, surface, component, render_props }`. A slot shows only items with that `surface`. The component is `<Banner {...item.render_props} nudge_id={item.id} />`.
+
+## Provider props
+
+| Prop | Meaning |
+| --- | --- |
+| `location` | Sent once to `decide(location, ctx)`. Slots do not take a location. |
+| `context` | Extra page facts, taken once and sent on every helper call. A component does not pass the org id itself. New fact names do not change the POST shape. |
+| `endpoint` | Your own URL. PLGKit does not pick the path. |
+| `registry` | The `component` name mapped to a real component, page template, or phone view. |
+
+## Surface props
+
+| Prop | Meaning |
+| --- | --- |
+| `surface` | Which slot this is. It shows only the provider's items with this `surface`. Put it anywhere inside the provider, even several layers down. No location prop. |
+
+## What each component gets
+
+| Prop | Meaning |
+| --- | --- |
+| `nudge_id` | `item.id`: the message file name, with its date-and-time prefix, without `.yml`. It is not a field in the message file, and it is not written into `render_props`. |
+| `...render_props` | Passed through as-is. The renderer does not read `assets_base_url`. The component gets finished image URLs. If `render_props` also has `nudge_id`, the renderer's value wins. |
+
+## Rules
+
+- If `component` is missing or not in the registry, show nothing and write a warning. Do not crash the page.
+- A `NudgeSurface` outside a provider shows nothing and writes a warning. It does not break the page.
+- A view is counted once per `decide()` result, and that count is not returned to the component. Drawing the component again does not count. The count starts over on each new `decide()` result.
+- `useNudgeTracking`, Python `nudge_tracking`, and the phone nudge tracking wrapper all return `{ click, dismiss }`. They share this contract: same `endpoint`, same `context`, same POST.
+- `dismiss_on_click` means call `click`, then `dismiss`.
+- Each helper call POSTs `{ nudge_id, action, context }` to `endpoint`. `action` is `impression`, `click`, or `dismiss`. `context` can be left out.
+- The browser never sends `user_id`. If `context` includes `user_id`, ignore it. `user_id` always comes from the server session. If it is missing, ignore the event and do not throw an error into the page.
+- Check each fact in `context`. Drop any fact you cannot check. Keep `organization_id` only when `session.user_belongs_to(org)`. The saved event is `{ user_id, ...checked context }`, sent to the matching PLGKit call (`impression`, `click`, or `dismiss`).
+- You can skip the helper and call `impression`, `dismiss`, or `click` yourself with that same event. Then you must make sure a view is counted only once. Only count a view when the user actually sees it. A page loaded ahead of time, a page the server drew and then threw away, or a spot that never appears must not use up the view limit.
