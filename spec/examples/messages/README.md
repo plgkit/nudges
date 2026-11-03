@@ -20,11 +20,13 @@ The host filters that list by `surface` and renders each slot. A renderer resolv
 
 ## Limits and selection
 
-Limits live in `plgkit/nudges/config.yml` (`location_limits` and `surface_limits`), not in message files, so messages cannot disagree about a page's cap. A location or surface that is not listed defaults to 1.
+Limits live in `plgkit/nudges/config.yml` under `locations`, not in message files, so messages cannot disagree about a page's cap. Surface maxes apply only within their location. `decide(location, ctx)` uses that location's `max` and that location's surface `max` values. A location not listed has max 1. A surface not listed under its location has max 1. `plgkit validate` (follow-up PR) flags a surface max greater than its location max as unreachable.
 
 ```python
 def decide(location, ctx):
-    location_limit = location_limits.get(location, 1)
+    loc = locations.get(location) or {}
+    location_limit = loc.get("max", 1)
+    surfaces = loc.get("surfaces") or {}
     candidates = [
         m for m in messages
         if m.location == location
@@ -40,7 +42,7 @@ def decide(location, ctx):
     for m in candidates:
         if len(winners) >= location_limit:
             break  # location is full; stop
-        surface_limit = surface_limits.get(m.surface, 1)
+        surface_limit = (surfaces.get(m.surface) or {}).get("max", 1)
         if per_surface.get(m.surface, 0) >= surface_limit:
             continue  # only this surface is full; skip and continue
         winners.append(m)
@@ -89,8 +91,8 @@ Invalid or missing required fields fail closed. The message is skipped and never
 
 | Field | Required? | Default | Read by | Notes |
 | --- | --- | --- | --- | --- |
-| `location` | Yes | — | Engine | Missing = fail closed: the message is never returned or rendered. Argument to `decide(location, ctx)`. Not on each result item. Cap is `location_limits` in config; unlisted locations default to 1. Examples: `home`, `get-started`. |
-| `surface` | Yes | — | Engine | Missing = fail closed. On each result item. The host filters by it to render each slot. Not merged into component props. Cap is `surface_limits` in config; unlisted surfaces default to 1. Examples: `main-top`, `modal`. |
+| `location` | Yes | — | Engine | Missing = fail closed: the message is never returned or rendered. Argument to `decide(location, ctx)`. Not on each result item. Cap is `locations.<name>.max` in config; unlisted locations default to 1. Examples: `home`, `get-started`. |
+| `surface` | Yes | — | Engine | Missing = fail closed. On each result item. The host filters by it to render each slot. Not merged into component props. Cap is that location's `surfaces.<name>.max`; a surface not listed there defaults to 1. Examples: `main-top`, `modal`. |
 | `component` | Yes | — | Renderer | Universal name, never a framework path. Examples: `Banner`, `OnboardingModal`. The renderer registry maps it to a real component, template, or view. Missing or unregistered = fail closed: render nothing, and the renderer logs a warning. CI can flag unregistered names. Not merged into component props. See [the renderer contract](../../renderers.md). |
 | `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. Inclusive at that exact instant. |
 | `active.to` | No | Live forever | Engine | UTC. A date with no time is midnight UTC. Exclusive at that exact instant. The modal omits it. |

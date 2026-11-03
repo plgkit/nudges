@@ -2,12 +2,16 @@
 # decide() joins relative `asset` values in render_props with assets_base_url before returning.
 assets_base_url: "/static/nudges/"
 
-# Max winners decide() may return for a location. A location not listed defaults to 1.
-location_limits:
-  home: 2
-  get-started: 1
-
-# Max winners on one surface within that location. A surface not listed defaults to 1.
-surface_limits:
-  main-top: 2
-  modal: 1
+# Per location. Surface maxes apply only inside that location.
+# A location not listed has max 1. A surface not listed under its location has max 1.
+# plgkit validate (follow-up PR) flags a surface max greater than its location max as unreachable.
+locations:
+  home:
+    max: 2
+    surfaces:
+      main-top:
+        max: 2
+      modal:
+        max: 1
+  get-started:
+    max: 1
