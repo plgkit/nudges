@@ -179,7 +179,7 @@ def dismiss(nudge_id, event, db=None):
 
 
 def undismiss(nudge_id, event, db=None):
-    """Dev-only: delete dismiss rows for this user and nudge so decide() can show it again."""
+    """Dev-only: delete dismiss and impression rows for this user and nudge."""
     if not isinstance(nudge_id, str) or nudge_id == "":
         return
     if not isinstance(event, dict):
@@ -192,7 +192,7 @@ def undismiss(nudge_id, event, db=None):
     with _lock:
         db.execute(
             "DELETE FROM plgkit_events "
-            "WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'",
+            "WHERE user_id = ? AND nudge_id = ? AND action IN ('dismiss', 'impression')",
             (user_id, nudge_id),
         )
 

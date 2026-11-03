@@ -204,6 +204,29 @@ func TestDismissScope(t *testing.T) {
 	}
 }
 
+func TestUndismissResetsImpressions(t *testing.T) {
+	db := openTestDB(t)
+	opts := plgkit.Options{DB: db, Config: testConfig()}
+	banner := testMessage(map[string]any{"max_impressions": 2})
+	if err := plgkit.Impression("banner", map[string]any{"user_id": "u_123"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := plgkit.Impression("banner", map[string]any{"user_id": "u_123"}); err != nil {
+		t.Fatal(err)
+	}
+	shown, err := plgkit.Decide("home", testCtx(nil), []map[string]any{banner}, opts)
+	if err != nil || len(shown) != 0 {
+		t.Fatalf("cap reached %#v %v", shown, err)
+	}
+	if err := plgkit.Undismiss("banner", map[string]any{"user_id": "u_123"}); err != nil {
+		t.Fatal(err)
+	}
+	shown, err = plgkit.Decide("home", testCtx(nil), []map[string]any{banner}, opts)
+	if err != nil || stringsEqual(idsOf(t, shown), []string{"banner"}) == false {
+		t.Fatalf("undismiss should reset impressions %#v %v", shown, err)
+	}
+}
+
 func TestUndismissCycle(t *testing.T) {
 	db := openTestDB(t)
 	opts := plgkit.Options{DB: db, Config: testConfig()}

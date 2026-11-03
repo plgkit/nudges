@@ -187,14 +187,16 @@ export function dismiss(nudgeId: string, event: Record<string, unknown> | null, 
   record("dismiss", nudgeId, event, db);
 }
 
-/** Dev-only: delete dismiss rows for this user and nudge. */
+/** Dev-only: delete dismiss and impression rows for this user and nudge. */
 export function undismiss(nudgeId: string, event: Record<string, unknown> | null, db?: SqlDB | null): void {
   if (typeof nudgeId !== "string" || nudgeId === "" || !event || typeof event !== "object") return;
   const userId = event.user_id;
   if (typeof userId !== "string" || userId === "") return;
   const database = db ?? getDefaultDb();
   database
-    .prepare("DELETE FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'")
+    .prepare(
+      "DELETE FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action IN ('dismiss', 'impression')",
+    )
     .run(userId, nudgeId);
 }
 

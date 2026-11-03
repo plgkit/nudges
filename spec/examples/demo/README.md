@@ -34,4 +34,4 @@ The top bar says who is signed in. **user_one** is orange. **user_two** is blue.
 
 Home shows the banner. Get started shows the onboarding window. Press **Close** on each. Reload: they stay hidden for this person. Switch to the other person: both show again.
 
-Dev only: to show a message again for **user_one**, run `plgkit undismiss <nudge_id> --user 1` from this folder (same `plgkit` as your backend). That deletes dismiss rows for that user and nudge. Example: `plgkit undismiss 20261030183743-home-supersuit-launch-banner --user 1`.
+Dev only: to show a message again for **user_one**, run `plgkit undismiss <nudge_id> --user 1` from this folder (same `plgkit` as your backend). That deletes dismiss and impression rows for that user and nudge (view cap resets). Example: `plgkit undismiss 20261030183743-home-supersuit-launch-banner --user 1`.
