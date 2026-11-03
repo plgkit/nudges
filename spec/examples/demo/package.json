@@ -3,8 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "start": "node scripts/dev.mjs"
+    "dev": "vite"
   },
   "dependencies": {
     "react": "^18.3.1",

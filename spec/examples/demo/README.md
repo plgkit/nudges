@@ -1,26 +1,26 @@
 # Try the nudges
 
-One page. Three backends. From this folder:
-
-```
-npm install
-npm start
-```
-
-That runs `plgkit migrate`, starts the **Python** backend on port 8787, then Vite for the page. Vite proxies `/api` to the backend.
-
-Other backends:
-
-```
-npm start -- --backend go
-npm start -- --backend node
-```
+One page. Three backends.
 
 You do not set a database address. Events go in `plgkit_events.sqlite` in this folder (`spec/examples/demo/plgkit_events.sqlite`). That file is not committed.
 
-## Start a backend only
+## Run everything
 
-If you want two terminals yourself:
+From the **repo root** (once: `npm install --prefix spec/examples/demo`):
+
+```
+script/server
+script/server --backend go
+script/server --backend node
+```
+
+That runs `plgkit migrate`, starts the API on port **8787** (Python by default), then Vite. Open the URL Vite prints. Ctrl+C stops both.
+
+The `script/server` file is executable in git. If your checkout says permission denied, run `chmod +x script/server`.
+
+## Backend only
+
+If you want the page in a separate terminal:
 
 | Backend | Command |
 | --- | --- |
@@ -28,7 +28,7 @@ If you want two terminals yourself:
 | Go | `go run ../../../packages/go/cmd/plgkit migrate && go run ./backends/go` |
 | TypeScript | `node --disable-warning=ExperimentalWarning --experimental-strip-types ../../../packages/node/src/cli.ts migrate && node --disable-warning=ExperimentalWarning --experimental-strip-types backends/node/server.ts` |
 
-Then in another terminal: `npm run dev`.
+Then from this folder: `npm run dev`.
 
 The TypeScript backend reads sample messages with the `yaml` package from this folder (`npm install` once).
 

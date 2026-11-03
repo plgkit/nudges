@@ -1,20 +1,56 @@
 #!/usr/bin/env node
 /**
- * Run plgkit migrate, start one demo backend, then Vite.
- * Usage: npm start [-- --backend python|go|node]
+ * Migrate, start one demo backend, then Vite.
+ * Entry: script/server
  */
 import { spawn, spawnSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const demoDir = path.resolve(scriptDir, "..");
-const repoRoot = path.resolve(demoDir, "../../..");
+const repoRoot = path.resolve(scriptDir, "..");
+const demoDir = path.join(repoRoot, "spec/examples/demo");
 
 const NODE_FLAGS = ["--disable-warning=ExperimentalWarning", "--experimental-strip-types"];
 
+export function run(argv) {
+  const backend = parseBackend(argv);
+  ensureDeps();
+  runMigrate(backend);
+
+  const backendProc = startBackend(backend);
+  let viteProc = null;
+  let exiting = false;
+
+  function shutdown(code = 0) {
+    if (exiting) return;
+    exiting = true;
+    if (viteProc && !viteProc.killed) viteProc.kill("SIGTERM");
+    if (backendProc && !backendProc.killed) backendProc.kill("SIGTERM");
+    process.exit(code);
+  }
+
+  process.on("SIGINT", () => shutdown(130));
+  process.on("SIGTERM", () => shutdown(143));
+
+  backendProc.on("exit", (code, signal) => {
+    if (exiting) return;
+    if (signal) shutdown(1);
+    if (code && code !== 0) shutdown(code);
+    shutdown(0);
+  });
+
+  viteProc = startVite();
+  viteProc.on("exit", (code, signal) => {
+    if (exiting) return;
+    if (signal) shutdown(1);
+    shutdown(code ?? 0);
+  });
+}
+
 function usage() {
-  console.error("Usage: npm start [-- --backend python|go|node]");
+  console.error("Usage: script/server [--backend python|go|node]");
   console.error("  Default backend: python");
 }
 
@@ -47,6 +83,12 @@ function parseBackend(argv) {
     process.exit(1);
   }
   return backend;
+}
+
+function ensureDeps() {
+  if (fs.existsSync(path.join(demoDir, "node_modules", "vite"))) return;
+  console.error("Run once: npm install --prefix spec/examples/demo");
+  process.exit(1);
 }
 
 function runMigrate(backend) {
@@ -107,42 +149,15 @@ function startBackend(backend) {
 }
 
 function startVite() {
-  const npm = process.platform === "win32" ? "npm.cmd" : "npm";
-  return spawn(npm, ["run", "dev"], {
+  const viteBin = path.join(demoDir, "node_modules", "vite", "bin", "vite.js");
+  return spawn(process.execPath, [viteBin], {
     cwd: demoDir,
     env: process.env,
     stdio: "inherit",
   });
 }
 
-const backend = parseBackend(process.argv.slice(2));
-runMigrate(backend);
-
-const backendProc = startBackend(backend);
-let viteProc = null;
-let exiting = false;
-
-function shutdown(code = 0) {
-  if (exiting) return;
-  exiting = true;
-  if (viteProc && !viteProc.killed) viteProc.kill("SIGTERM");
-  if (backendProc && !backendProc.killed) backendProc.kill("SIGTERM");
-  process.exit(code);
+const thisFile = fileURLToPath(import.meta.url);
+if (process.argv[1] && path.resolve(thisFile) === path.resolve(process.argv[1])) {
+  run(process.argv.slice(2));
 }
-
-process.on("SIGINT", () => shutdown(130));
-process.on("SIGTERM", () => shutdown(143));
-
-backendProc.on("exit", (code, signal) => {
-  if (exiting) return;
-  if (signal) shutdown(1);
-  if (code && code !== 0) shutdown(code);
-  shutdown(0);
-});
-
-viteProc = startVite();
-viteProc.on("exit", (code, signal) => {
-  if (exiting) return;
-  if (signal) shutdown(1);
-  shutdown(code ?? 0);
-});
