@@ -16,7 +16,7 @@ Each item has `id` (the filename without `.yml`), `surface`, `component`, and `r
 
 The host filters that list by `surface` and renders each slot. A renderer resolves `component`, passes `nudge_id` from the item `id`, and spreads `render_props`. It does not write `nudge_id` into `render_props`. The contract is in [the renderer contract](../../renderers.md).
 
-`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. `impression(nudge_id, event)`, `dismiss(nudge_id, event)`, and `click(nudge_id, event)` take a flat `event`, not the full `ctx`: `user_id` is required, plus any optional flat keys to record, for example `{"user_id": "u_123", "organization_id": "acme"}`. A missing `user_id` fails closed: the event is ignored and never throws into the page. `user_id` matches `ctx.user.id`. The renderer helper calls the developer's backend endpoint; that backend builds the `event` and calls PLGKit's `impression`, `click`, or `dismiss`. The helper still enforces one impression per message per `decide()` result. Re-renders and remounts do not count. A new `decide()` call can count again. Calling `impression` yourself makes dedupe your responsibility. `dismiss` is accepted for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: whether to show a close control. `click` records that a control was clicked. A `dismiss_on_click` control calls `click`, then `dismiss`.
+`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. `impression(nudge_id, event)`, `dismiss(nudge_id, event)`, and `click(nudge_id, event)` take a flat `event`, not the full `ctx`: `user_id` is required, plus any optional flat keys to record, for example `{"user_id": "u_123", "organization_id": "acme"}`. A missing `user_id` fails closed: the event is ignored and never throws into the page. `user_id` matches `ctx.user.id`. The renderer helper calls one developer backend endpoint with `{ nudge_id, action }` (`impression`, `click`, or `dismiss`); that backend builds the `event` and calls the matching PLGKit function. The helper still enforces one impression per message per `decide()` result. Re-renders and remounts do not count. A new `decide()` call can count again. Calling `impression` yourself makes dedupe your responsibility. `dismiss` is accepted for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: whether to show a close control. `click` records that a control was clicked. A `dismiss_on_click` control calls `click`, then `dismiss`.
 
 ## Limits and selection
 
@@ -68,7 +68,7 @@ Result: `[A, B]`.
 
 ## Renderers
 
-`component` is a universal name, never a framework path. Renderers are separate packages. The contract, including the registry, fail-closed rendering, and the `useNudge` helper, is in [spec/renderers.md](../../renderers.md).
+`component` is a universal name, never a framework path. Renderers are separate packages. The contract, including the registry, fail-closed rendering, and the `useNudgeTracking` helper, is in [spec/renderers.md](../../renderers.md).
 
 ## App layout
 
