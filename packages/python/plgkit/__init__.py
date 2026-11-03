@@ -13,6 +13,7 @@ from plgkit.store import (
     migrate,
     resolve_database_url,
     set_default_db,
+    undismiss,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "migrate",
     "resolve_database_url",
     "set_default_db",
+    "undismiss",
 ]

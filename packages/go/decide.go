@@ -153,39 +153,66 @@ func lookup(obj map[string]any, key string) (any, bool) {
 }
 
 func isDismissed(db *sql.DB, userID string, message map[string]any, ctx map[string]any) (bool, error) {
-	// No dismiss_scope: any dismiss row for this user and nudge matches.
+	// The latest matching dismiss must be newer than the latest undismiss.
+	// No dismiss_scope: any dismiss row for this user and nudge can match.
 	// With dismiss_scope: every listed key must be on ctx and on the row, with
 	// equal values. A row missing a scoped key does not match. If ctx is missing
 	// a scoped key, no row matches, so the message can show.
 	if userID == "" {
 		return false, nil
 	}
-	rows, err := dismissContexts(db, userID, message["id"].(string))
+	events, err := dismissToggleEvents(db, userID, message["id"].(string))
 	if err != nil {
 		return false, err
 	}
+	var latestUndismiss *toggleEvent
+	for i := range events {
+		if events[i].action == "undismiss" {
+			latestUndismiss = &events[i]
+		}
+	}
 	scopeRaw, hasScope := message["dismiss_scope"]
-	if !hasScope || scopeRaw == nil {
-		return len(rows) > 0, nil
-	}
-	scope, ok := stringList(scopeRaw)
-	if !ok {
-		return false, nil
-	}
-	ctxValues := map[string]any{}
-	for _, key := range scope {
-		value, found := lookup(ctx, key)
-		if !found {
+	var scope []string
+	if hasScope && scopeRaw != nil {
+		var ok bool
+		scope, ok = stringList(scopeRaw)
+		if !ok {
 			return false, nil
 		}
-		ctxValues[key] = value
 	}
-	for _, row := range rows {
-		if rowMatches(row, scope, ctxValues) {
-			return true, nil
+	ctxValues := map[string]any{}
+	if scope != nil {
+		for _, key := range scope {
+			value, found := lookup(ctx, key)
+			if !found {
+				return false, nil
+			}
+			ctxValues[key] = value
 		}
 	}
-	return false, nil
+	var latestDismiss *toggleEvent
+	for i := range events {
+		if events[i].action != "dismiss" {
+			continue
+		}
+		if scope == nil || rowMatches(events[i].context, scope, ctxValues) {
+			latestDismiss = &events[i]
+		}
+	}
+	if latestDismiss == nil {
+		return false, nil
+	}
+	if latestUndismiss == nil {
+		return true, nil
+	}
+	return eventIsAfter(*latestDismiss, *latestUndismiss), nil
+}
+
+func eventIsAfter(left, right toggleEvent) bool {
+	if left.createdAt != right.createdAt {
+		return left.createdAt > right.createdAt
+	}
+	return left.id > right.id
 }
 
 func rowMatches(row map[string]any, scope []string, ctxValues map[string]any) bool {

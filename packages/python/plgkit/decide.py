@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 
-from plgkit.store import count_impressions, dismiss_contexts, get_default_db
+from plgkit.store import count_impressions, dismiss_toggle_events, get_default_db
 
 _DATE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
 _MAX_EXACT_INT = 2**53
@@ -130,29 +130,45 @@ def join_asset(asset, base):
 
 
 def _is_dismissed(db, user_id, message, ctx):
-    """True when a dismiss row blocks this message.
+    """True when the latest matching dismiss beats the latest undismiss.
 
-    No dismiss_scope: any dismiss row for this user and nudge matches.
+    No dismiss_scope: any dismiss row for this user and nudge can match.
     With dismiss_scope: every listed key must be on ctx and on the row, with
     equal values. A row missing a scoped key does not match. If ctx is missing
     a scoped key, no row matches, so the message can show.
     """
     if not user_id:
         return False
+    events = dismiss_toggle_events(db, user_id, message["id"])
+    latest_undismiss = None
+    for event in events:
+        if event["action"] == "undismiss":
+            latest_undismiss = event
     scope = message.get("dismiss_scope")
-    rows = dismiss_contexts(db, user_id, message["id"])
-    if scope is None:
-        return len(rows) > 0
-    ctx_values = {}
-    for key in scope:
-        value, ok = lookup(ctx, key)
-        if not ok:
-            return False
-        ctx_values[key] = value
-    for row in rows:
-        if _row_matches_scope(row, scope, ctx_values):
-            return True
-    return False
+    ctx_values = None
+    if scope is not None:
+        ctx_values = {}
+        for key in scope:
+            value, ok = lookup(ctx, key)
+            if not ok:
+                return False
+            ctx_values[key] = value
+    latest_dismiss = None
+    for event in events:
+        if event["action"] != "dismiss":
+            continue
+        row = event["context"]
+        if scope is None or _row_matches_scope(row, scope, ctx_values):
+            latest_dismiss = event
+    if latest_dismiss is None:
+        return False
+    if latest_undismiss is None:
+        return True
+    return _event_is_after(latest_dismiss, latest_undismiss)
+
+
+def _event_is_after(left, right):
+    return (left["created_at"], left["id"]) > (right["created_at"], right["id"])
 
 
 def _row_matches_scope(row, scope, ctx_values):

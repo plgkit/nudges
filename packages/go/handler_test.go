@@ -20,7 +20,7 @@ func TestMigrateCanRunTwice(t *testing.T) {
 	if err := db.QueryRow(`SELECT COUNT(*) FROM plgkit_schema_migrations`).Scan(&count); err != nil {
 		t.Fatal(err)
 	}
-	if count != 1 {
+	if count != 2 {
 		t.Fatalf("versions = %d", count)
 	}
 	names := map[string]bool{}
@@ -115,6 +115,17 @@ func TestBadBodyWritesNothing(t *testing.T) {
 		if status := plgkit.HandleEvent(body, "u_123", map[string]func(string, any) bool{}); status != 400 {
 			t.Fatalf("%#v -> %d", body, status)
 		}
+	}
+	if len(eventRows(t, db)) != 0 {
+		t.Fatal("wrote a row")
+	}
+}
+
+func TestUndismissIsCLIOnly(t *testing.T) {
+	db := openTestDB(t)
+	body := map[string]any{"nudge_id": "n1", "action": "undismiss", "context": map[string]any{}}
+	if plgkit.HandleEvent(body, "u_1", nil) != 400 {
+		t.Fatal("status")
 	}
 	if len(eventRows(t, db)) != 0 {
 		t.Fatal("wrote a row")

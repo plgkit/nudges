@@ -39,7 +39,7 @@ test("migrate can run twice", () => {
   const db = openDb();
   migrate(db);
   const count = db.prepare("SELECT COUNT(*) AS n FROM plgkit_schema_migrations").get() as { n: number };
-  assert.equal(Number(count.n), 1);
+  assert.equal(Number(count.n), 2);
   const names = new Set(
     (db.prepare("SELECT name FROM sqlite_master WHERE type IN ('table', 'index')").all() as { name: string }[]).map(
       (row) => row.name,
@@ -114,6 +114,12 @@ test("bad body writes nothing", () => {
     { nudge_id: "n1", action: "click", context: { organization_id: { nested: true } } },
   ];
   for (const body of bodies) assert.equal(handleEvent(body, "u_123", {}, db), 400);
+  assert.deepEqual(rows(db), []);
+});
+
+test("undismiss is cli only", () => {
+  const db = openDb();
+  assert.equal(handleEvent({ nudge_id: "n1", action: "undismiss", context: {} }, "u_1", {}, db), 400);
   assert.deepEqual(rows(db), []);
 });
 

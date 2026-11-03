@@ -178,6 +178,10 @@ def dismiss(nudge_id, event, db=None):
     _record("dismiss", nudge_id, event, db)
 
 
+def undismiss(nudge_id, event, db=None):
+    _record("undismiss", nudge_id, event, db)
+
+
 def count_impressions(db, user_id, nudge_id):
     with _lock:
         row = db.execute(
@@ -188,21 +192,26 @@ def count_impressions(db, user_id, nudge_id):
     return int(row[0])
 
 
-def dismiss_contexts(db, user_id, nudge_id):
+def dismiss_toggle_events(db, user_id, nudge_id):
+    """Dismiss and undismiss rows for one user and nudge, oldest first."""
     with _lock:
         rows = db.execute(
-            "SELECT context FROM plgkit_events "
-            "WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'",
+            "SELECT id, action, context, created_at FROM plgkit_events "
+            "WHERE user_id = ? AND nudge_id = ? AND action IN ('dismiss', 'undismiss') "
+            "ORDER BY created_at, id",
             (user_id, nudge_id),
         ).fetchall()
     found = []
-    for (raw,) in rows:
+    for row_id, action, raw, created_at in rows:
         try:
             data = json.loads(raw)
         except (TypeError, json.JSONDecodeError):
-            continue
-        if isinstance(data, dict):
-            found.append(data)
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        found.append(
+            {"id": row_id, "action": action, "context": data, "created_at": created_at}
+        )
     return found
 
 

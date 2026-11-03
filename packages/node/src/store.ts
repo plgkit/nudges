@@ -187,6 +187,10 @@ export function dismiss(nudgeId: string, event: Record<string, unknown> | null, 
   record("dismiss", nudgeId, event, db);
 }
 
+export function undismiss(nudgeId: string, event: Record<string, unknown> | null, db?: SqlDB | null): void {
+  record("undismiss", nudgeId, event, db);
+}
+
 export function countImpressions(db: SqlDB, userId: string, nudgeId: string): number {
   const row = db
     .prepare(
@@ -196,20 +200,29 @@ export function countImpressions(db: SqlDB, userId: string, nudgeId: string): nu
   return Number(row.n);
 }
 
-export function dismissContexts(db: SqlDB, userId: string, nudgeId: string): Record<string, unknown>[] {
+export type ToggleEvent = {
+  id: string;
+  action: string;
+  context: Record<string, unknown>;
+  created_at: string;
+};
+
+export function dismissToggleEvents(db: SqlDB, userId: string, nudgeId: string): ToggleEvent[] {
   const rows = db
     .prepare(
-      "SELECT context FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'",
+      "SELECT id, action, context, created_at FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action IN ('dismiss', 'undismiss') ORDER BY created_at, id",
     )
-    .all(userId, nudgeId) as { context: string }[];
-  const found: Record<string, unknown>[] = [];
+    .all(userId, nudgeId) as { id: string; action: string; context: string; created_at: string }[];
+  const found: ToggleEvent[] = [];
   for (const row of rows) {
+    let context: Record<string, unknown> = {};
     try {
       const data = JSON.parse(row.context);
-      if (data && typeof data === "object" && !Array.isArray(data)) found.push(data);
+      if (data && typeof data === "object" && !Array.isArray(data)) context = data;
     } catch {
-      continue;
+      context = {};
     }
+    found.push({ id: row.id, action: row.action, context, created_at: row.created_at });
   }
   return found;
 }
@@ -234,7 +247,7 @@ function record(
     .prepare(
       "INSERT INTO plgkit_events (id, nudge_id, action, user_id, context, created_at) VALUES (?, ?, ?, ?, ?, ?)",
     )
-    .run(crypto.randomUUID(), nudgeId, action, userId, dumpContext(context), new Date().toISOString());
+    .run(crypto.randomUUID(), nudgeId, action, userId, dumpContext(context), utcTimestamp());
 }
 
 export function canon(value: unknown): { ok: true; value: null | string | number | boolean } | { ok: false } {
@@ -348,6 +361,17 @@ function sqlStatements(text: string): string[] {
     .split(";")
     .map((part) => part.trim())
     .filter((part) => part !== "");
+}
+
+function utcTimestamp(): string {
+  const now = new Date();
+  const micro = Number(process.hrtime.bigint() % 1_000_000n);
+  const pad = (value: number, width: number) => String(value).padStart(width, "0");
+  return (
+    `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1, 2)}-${pad(now.getUTCDate(), 2)}` +
+    `T${pad(now.getUTCHours(), 2)}:${pad(now.getUTCMinutes(), 2)}:${pad(now.getUTCSeconds(), 2)}.` +
+    `${pad(micro, 6)}Z`
+  );
 }
 
 function warnDefault(name: string): void {

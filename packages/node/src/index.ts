@@ -9,6 +9,7 @@ export {
   migrate,
   resolveDatabaseURL,
   setDefaultDb,
+  undismiss,
   type SqlDB,
 } from "./store.ts";
 export { decide, type DecideOptions, type Message } from "./decide.ts";

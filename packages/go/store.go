@@ -174,6 +174,11 @@ func Dismiss(nudgeID string, event map[string]any) error {
 	return record("dismiss", nudgeID, event, nil)
 }
 
+// Undismiss appends one undismiss. A missing user_id is ignored. CLI-only.
+func Undismiss(nudgeID string, event map[string]any) error {
+	return record("undismiss", nudgeID, event, nil)
+}
+
 func record(action, nudgeID string, event map[string]any, db *sql.DB) error {
 	if nudgeID == "" || event == nil {
 		return nil
@@ -230,29 +235,36 @@ func countImpressions(db *sql.DB, userID, nudgeID string) (int, error) {
 	return n, nil
 }
 
-func dismissContexts(db *sql.DB, userID, nudgeID string) ([]map[string]any, error) {
+type toggleEvent struct {
+	id        string
+	action    string
+	context   map[string]any
+	createdAt string
+}
+
+func dismissToggleEvents(db *sql.DB, userID, nudgeID string) ([]toggleEvent, error) {
 	mu.Lock()
 	defer mu.Unlock()
 	rows, err := dbQuery(
 		db,
-		`SELECT context FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'`,
+		`SELECT id, action, context, created_at FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action IN ('dismiss', 'undismiss') ORDER BY created_at, id`,
 		userID, nudgeID,
 	)
 	if err != nil {
 		return nil, fail("Could not read events.")
 	}
 	defer rows.Close()
-	var found []map[string]any
+	var found []toggleEvent
 	for rows.Next() {
+		var item toggleEvent
 		var raw string
-		if err := rows.Scan(&raw); err != nil {
+		if err := rows.Scan(&item.id, &item.action, &raw, &item.createdAt); err != nil {
 			return nil, fail("Could not read events.")
 		}
-		var data map[string]any
-		if err := json.Unmarshal([]byte(raw), &data); err != nil || data == nil {
-			continue
+		if err := json.Unmarshal([]byte(raw), &item.context); err != nil || item.context == nil {
+			item.context = map[string]any{}
 		}
-		found = append(found, data)
+		found = append(found, item)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fail("Could not read events.")

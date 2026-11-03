@@ -32,7 +32,7 @@ class HandlerTests(unittest.TestCase):
     def test_migrate_can_run_twice(self):
         plgkit.migrate(self.db)
         count = self.db.execute("SELECT COUNT(*) FROM plgkit_schema_migrations").fetchone()[0]
-        self.assertEqual(count, 1)
+        self.assertEqual(count, 2)
         names = {
             row[0]
             for row in self.db.execute(
@@ -125,6 +125,11 @@ class HandlerTests(unittest.TestCase):
                 400,
                 body,
             )
+        self.assertEqual(rows(self.db), [])
+
+    def test_undismiss_is_cli_only(self):
+        body = {"nudge_id": "n1", "action": "undismiss", "context": {}}
+        self.assertEqual(plgkit.handle_event(body, "u_1", {}, db=self.db), 400)
         self.assertEqual(rows(self.db), [])
 
     def test_missing_user_is_ignored(self):
@@ -221,6 +226,32 @@ class HandlerTests(unittest.TestCase):
             self.assertEqual(first.exception.code, 0)
             self.assertEqual(second.exception.code, 0)
             self.assertTrue(Path(url.removeprefix("sqlite:///")).is_file())
+
+    def test_cli_undismiss(self):
+        with tempfile.TemporaryDirectory() as directory:
+            url = "sqlite:///" + str(Path(directory) / "events.sqlite")
+            previous = os.environ.get("PLGKIT_DATABASE_URL")
+            os.environ["PLGKIT_DATABASE_URL"] = url
+            try:
+                with self.assertRaises(SystemExit) as migrate_exit:
+                    main(["migrate"])
+                self.assertEqual(migrate_exit.exception.code, 0)
+                plgkit.dismiss("banner", {"user_id": "u_123"}, db=plgkit.connect(url))
+                with self.assertRaises(SystemExit) as undismiss_exit:
+                    main(["undismiss", "banner", "--user", "u_123"])
+                self.assertEqual(undismiss_exit.exception.code, 0)
+            finally:
+                set_default_db(None)
+                if previous is None:
+                    os.environ.pop("PLGKIT_DATABASE_URL", None)
+                else:
+                    os.environ["PLGKIT_DATABASE_URL"] = previous
+            db = plgkit.connect(url)
+            rows = db.execute(
+                "SELECT action FROM plgkit_events WHERE user_id = ? AND nudge_id = ? ORDER BY created_at, id",
+                ("u_123", "banner"),
+            ).fetchall()
+            self.assertEqual([row[0] for row in rows], ["dismiss", "undismiss"])
 
 
 if __name__ == "__main__":

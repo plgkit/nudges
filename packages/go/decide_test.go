@@ -204,6 +204,33 @@ func TestDismissScope(t *testing.T) {
 	}
 }
 
+func TestUndismissCycle(t *testing.T) {
+	db := openTestDB(t)
+	opts := plgkit.Options{DB: db, Config: testConfig()}
+	banner := testMessage(map[string]any{"max_impressions": nil})
+	if err := plgkit.Dismiss("banner", map[string]any{"user_id": "u_123"}); err != nil {
+		t.Fatal(err)
+	}
+	shown, err := plgkit.Decide("home", testCtx(nil), []map[string]any{banner}, opts)
+	if err != nil || len(shown) != 0 {
+		t.Fatalf("dismiss should hide %#v %v", shown, err)
+	}
+	if err := plgkit.Undismiss("banner", map[string]any{"user_id": "u_123"}); err != nil {
+		t.Fatal(err)
+	}
+	shown, err = plgkit.Decide("home", testCtx(nil), []map[string]any{banner}, opts)
+	if err != nil || stringsEqual(idsOf(t, shown), []string{"banner"}) == false {
+		t.Fatalf("undismiss should show %#v %v", shown, err)
+	}
+	if err := plgkit.Dismiss("banner", map[string]any{"user_id": "u_123"}); err != nil {
+		t.Fatal(err)
+	}
+	shown, err = plgkit.Decide("home", testCtx(nil), []map[string]any{banner}, opts)
+	if err != nil || len(shown) != 0 {
+		t.Fatalf("dismiss again should hide %#v %v", shown, err)
+	}
+}
+
 func TestActiveWindowAndUnknownAudience(t *testing.T) {
 	db := openTestDB(t)
 	opts := plgkit.Options{DB: db, Config: testConfig()}

@@ -33,3 +33,5 @@ Open the address Vite prints.
 The top bar says who is signed in. **user_one** is orange. **user_two** is blue. Pick a name to switch. The server remembers that person in a cookie. The page does not send the user id.
 
 Home shows the banner. Get started shows the onboarding window. Press **Close** on each. Reload: they stay hidden for this person. Switch to the other person: both show again.
+
+To bring a message back for **user_one** without touching the database by hand, run `plgkit undismiss <nudge_id> --user 1` from this folder after `plgkit migrate` (same as starting a backend). Example: `plgkit undismiss 20261030183743-home-supersuit-launch-banner --user 1`.
