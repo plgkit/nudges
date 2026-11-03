@@ -16,6 +16,6 @@ The helper takes `nudge_id`. React:
 const { dismiss } = useNudge(props.nudge_id);
 ```
 
-On the first mount for this page view, `useNudge` calls `impression(id)` once. `dismiss()` calls `dismiss(id)`. The backend accepts `dismiss(id)` for every nudge.
+On the first mount for this `decide()` result, `useNudge` records one impression. `dismiss()` records a dismissal. Both go to the developer's backend with only `nudge_id`. The browser must not be trusted to set `user_id`. The developer's backend builds the flat `event` from its own session and calls `impression(nudge_id, event)` or `dismiss(nudge_id, event)`. `click(nudge_id, event)` is the same path. A `dismiss_on_click` control calls `click`, then `dismiss`. A missing `user_id` fails closed: the event is ignored and never throws into the page.
 
-The helper is optional. Call `dismiss(id)` and `impression(id)` yourself if you prefer. Then the once-per-page-view dedupe is your responsibility. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
+The helper is optional. From your backend you may call `impression`, `dismiss`, and `click` yourself with an `event` built from the session. Then the once-per-`decide()`-result dedupe is your responsibility. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.

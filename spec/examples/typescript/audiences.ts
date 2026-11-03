@@ -22,6 +22,7 @@ type User = {
 type Context = {
   user: User;
   req?: unknown; // your framework's request object, if you need it
+  organization_id?: string; // flat ctx key, for example dismiss_scope
 };
 
 function ageInYears(birthDate: string, now = new Date()): number {

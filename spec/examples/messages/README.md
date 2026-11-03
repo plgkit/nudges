@@ -16,7 +16,7 @@ Each item has `id` (the filename without `.yml`), `surface`, `component`, and `r
 
 The host filters that list by `surface` and renders each slot. A renderer resolves `component`, passes `nudge_id` from the item `id`, and spreads `render_props`. It does not write `nudge_id` into `render_props`. The contract is in [the renderer contract](../../renderers.md).
 
-`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The renderer helper calls `impression(id)` once per message per page view and enforces that dedupe. Re-renders and remounts do not count. A new `decide()` call, such as navigation or reload, can count again. Calling `impression(id)` yourself makes dedupe your responsibility. `dismiss(id)` is accepted for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: whether to show a close control.
+`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. `impression(nudge_id, event)`, `dismiss(nudge_id, event)`, and `click(nudge_id, event)` take a flat `event`, not the full `ctx`: `user_id` is required, plus any optional flat keys to record, for example `{"user_id": "u_123", "organization_id": "acme"}`. A missing `user_id` fails closed: the event is ignored and never throws into the page. `user_id` matches `ctx.user.id`. The renderer helper calls `impression` once per message per `decide()` result and enforces that dedupe. Re-renders and remounts do not count. A new `decide()` call can count again. Calling `impression` yourself makes dedupe your responsibility. `dismiss` is accepted for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: whether to show a close control. `click` records that a control was clicked. A `dismiss_on_click` control calls `click`, then `dismiss`.
 
 ## Limits and selection
 
@@ -30,8 +30,8 @@ def decide(location, ctx):
         if m.location == location
         and m.surface and m.component and m.render_props is not None  # missing required fields fail closed; {} is valid
         and is_active(m, now_utc)  # UTC midnight if date-only; from inclusive; to exclusive; missing from = now; missing to = forever
-        and not dismissed(ctx.user, m.id)
-        and under_max_impressions(ctx.user, m)  # read the count only; missing = unlimited
+        and not dismissed(ctx, m)  # omitted dismiss_scope = any dismissal for this user_id; else those keys must match ctx
+        and under_max_impressions(ctx, m)  # count impression events for this user_id; missing max = unlimited
         and audience_matches(m, ctx)  # omitted audience = everyone
     ]
     candidates.sort(key=lambda m: (m.priority if m.priority is not None else 100, m.id))
@@ -95,9 +95,10 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. Inclusive at that exact instant. |
 | `active.to` | No | Live forever | Engine | UTC. A date with no time is midnight UTC. Exclusive at that exact instant. The modal omits it. |
 | `priority` | No | 100 | Engine | Lower numbers win. Ties go to the older filename (`id` ascending). |
-| `max_impressions` | No | Unlimited | Engine and renderer | The count is reported `impression(id)` calls. At most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. The renderer helper enforces that dedupe. A direct `impression(id)` call makes dedupe the caller's job. `decide()` only reads the count; a message at the cap is not a candidate. |
+| `max_impressions` | No | Unlimited | Engine and renderer | The count is `impression(nudge_id, event)` calls for this `user_id`. At most one per message per `decide()` result. Re-renders and remounts do not count again. A new `decide()` call can. The renderer helper enforces that dedupe. A direct call makes dedupe the caller's job. `decide()` only reads the count; a message at the cap is not a candidate. |
+| `dismiss_scope` | No | Everywhere for that user | Engine | Flat list of event/ctx keys, for example `[organization_id]`. Omitted means a dismissal for that `user_id` applies everywhere. When set, `decide()` treats the message as dismissed only if a dismissal for that user has the same values for those keys. A dismiss event missing a scoped key is ignored (fail closed). The modal sets `[organization_id]`. |
 | `audience` | No | Everyone matches | Engine | Omitted entirely means everyone matches. |
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
 | `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
-| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core except `asset`: `decide()` joins a relative `asset` with `assets_base_url`, and leaves values that are `http://`, `https://`, or start with `/` as is. Passed through as the component props, next to a separate `nudge_id`. `nudge_id` is not written into `render_props`. If this object also has `nudge_id`, the renderer's value wins. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. `dismiss_on_click` means that control calls `dismiss` for this nudge when clicked. |
+| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core except `asset`: `decide()` joins a relative `asset` with `assets_base_url`, and leaves values that are `http://`, `https://`, or start with `/` as is. Passed through as the component props, next to a separate `nudge_id`. `nudge_id` is not written into `render_props`. If this object also has `nudge_id`, the renderer's value wins. A `dismissible` value here is presentation only and does not gate `dismiss(nudge_id, event)`. `dismiss_on_click` means that control calls `click`, then `dismiss`, for this nudge. |

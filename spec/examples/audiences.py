@@ -30,6 +30,7 @@ class User:
 class Context:
     user: User
     req: Any = None  # your framework's request object, if you need it
+    organization_id: Optional[str] = None  # flat ctx key, for example dismiss_scope
 
 
 def _age_in_years(birth_date: date, today: Optional[date] = None) -> int:
