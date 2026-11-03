@@ -205,7 +205,7 @@ describe("NudgeSurface", () => {
     expect(decide).toHaveBeenLastCalledWith("home", { organization_id: "other" });
 
     const banner = view.container.querySelector(`aside`);
-    const modal = view.container.querySelector(`[role="dialog"]`);
+    const modal = document.body.querySelector(`[role="dialog"]`);
     expect(banner?.textContent).toContain("Supersuit v0 available in beta.");
     expect(view.container.textContent).toContain("Second banner on the same slot");
     expect(banner?.textContent).not.toContain("It's time to suit up");
@@ -304,6 +304,78 @@ describe("NudgeSurface", () => {
     );
     expect(warn).toHaveBeenCalledWith('Nudge "missing-props" has no render_props. Showing nothing.');
     expect(postedBodies()).toEqual([]);
+  });
+
+  it("opens OnboardingModal over the page", async () => {
+    function show(dismissible: boolean) {
+      return (
+        <NudgeProvider
+          location="get-started"
+          endpoint="/api/nudges/events"
+          context={{ organization_id: "acme" }}
+          registry={{ OnboardingModal }}
+          decide={async () => [
+            {
+              ...modalItem,
+              render_props: { ...modalItem.render_props, dismissible },
+            },
+          ]}
+        >
+          <main>
+            <NudgeSurface surface="modal" />
+          </main>
+        </NudgeProvider>
+      );
+    }
+
+    const view = mount(show(true));
+    await settle();
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
+    const overlay = dialog?.parentElement;
+    expect(view.container.querySelector('[role="dialog"]')).toBeNull();
+    expect(overlay?.parentElement).toBe(document.body);
+    expect(overlay?.className).toBe("nudge-modal");
+    expect(overlay?.style.position).toBe("fixed");
+    expect(overlay?.style.inset).toBe("0");
+    expect(overlay?.style.zIndex).toBe("1000");
+    expect(dialog?.getAttribute("aria-modal")).toBe("true");
+    expect(document.activeElement).toBe(dialog);
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(postedBodies().some((post) => post.body.action === "impression")).toBe(true);
+
+    const dismissCount = () => postedBodies().filter((post) => post.body.action === "dismiss").length;
+
+    await act(async () => {
+      overlay?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(dismissCount()).toBe(1);
+
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(dismissCount()).toBe(2);
+
+    const close = overlay?.querySelector("button");
+    if (!close) throw new Error("missing close button");
+    await act(async () => {
+      close.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(dismissCount()).toBe(3);
+
+    view.unmount();
+    expect(document.body.style.overflow).toBe("");
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+
+    mount(show(false));
+    await settle();
+    const quiet = document.body.querySelector(".nudge-modal");
+    expect(quiet?.querySelector("button")).toBeNull();
+    const before = dismissCount();
+    await act(async () => {
+      quiet?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(dismissCount()).toBe(before);
   });
 });
 
@@ -488,7 +560,7 @@ describe("tracking", () => {
     }
     expect(impression.map((post) => post.body.nudge_id).sort()).toEqual([bannerId, modalId].sort());
 
-    view.container.addEventListener("click", (event) => event.preventDefault());
+    document.addEventListener("click", (event) => event.preventDefault());
     const link = Array.from(view.container.querySelectorAll("a")).find((node) =>
       node.textContent?.includes("Join the waitlist"),
     );
@@ -505,7 +577,7 @@ describe("tracking", () => {
       `${bannerId}:dismiss`,
     ]);
 
-    const modalLink = Array.from(view.container.querySelectorAll("a")).find((node) =>
+    const modalLink = Array.from(document.body.querySelectorAll("a")).find((node) =>
       node.textContent?.includes("Activate your suit"),
     );
     if (!modalLink) throw new Error("missing modal link");

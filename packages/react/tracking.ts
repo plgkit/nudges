@@ -55,7 +55,7 @@ function observeVisible(anchor: HTMLElement, onVisible: () => void): () => void 
     stopped = true;
   };
 
-  const target = anchor.style.display === "contents" ? anchor.firstElementChild : anchor;
+  const target = visibleTarget(anchor);
   if (!target || !target.isConnected) return stop;
 
   const fire = () => {
@@ -95,6 +95,16 @@ function observeVisible(anchor: HTMLElement, onVisible: () => void): () => void 
 
   fire();
   return stop;
+}
+
+/** A modal is drawn on document.body, so it is not a child of the slot anchor. */
+function visibleTarget(anchor: HTMLElement): Element | null {
+  if (anchor.style.display !== "contents") return anchor;
+  if (anchor.firstElementChild) return anchor.firstElementChild;
+  const id = anchor.dataset.nudgeId;
+  if (!id) return null;
+  const escaped = typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(id) : id;
+  return document.querySelector(`[data-nudge-portal="${escaped}"]`);
 }
 
 function isCssHidden(element: Element): boolean {
