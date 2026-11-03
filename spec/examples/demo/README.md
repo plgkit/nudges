@@ -1,6 +1,26 @@
 # Try the nudges
 
-From this folder:
+One page. Three backends. Pick one backend, then start the page. They all listen on port 8787, so run only one at a time.
+
+You do not set a database address. Events go in `plgkit_events.sqlite` in this folder (`spec/examples/demo/plgkit_events.sqlite`). That file is not committed.
+
+## Start a backend
+
+Run these from this folder.
+
+| Backend | Command |
+| --- | --- |
+| Python | `PYTHONPATH=../../../packages/python python3 -m plgkit migrate && PYTHONPATH=../../../packages/python python3 backends/python/server.py` |
+| Go | `go run ../../../packages/go/cmd/plgkit migrate && go run ./backends/go` |
+| TypeScript | `node --disable-warning=ExperimentalWarning --experimental-strip-types ../../../packages/node/src/cli.ts migrate && node --disable-warning=ExperimentalWarning --experimental-strip-types backends/node/server.ts` |
+
+`plgkit migrate` creates the events file. The second half starts the backend.
+
+Install the page once before the TypeScript backend (`npm install` below). That backend reads the sample messages with the `yaml` package from this folder.
+
+## Start the page
+
+In a second terminal, from this folder:
 
 ```
 npm install && npm run dev
@@ -10,10 +30,6 @@ Open the address Vite prints.
 
 ## What to click
 
-Home shows the supersuit banner in the header. Get started shows the onboarding message in a dark window over the page.
+The top bar says who is signed in. **user_one** is orange. **user_two** is blue. Pick a name to switch. The server remembers that person in a cookie. The page does not send the user id.
 
-Join the waitlist, or Activate your suit, records a click and then dismisses that message. Close, the Escape key, or a click on the dark area dismisses it without leaving the page.
-
-Reload. A dismissed message stays hidden until you stop the dev server.
-
-The terminal prints each impression, click, and dismiss. The page does not say who you are. The server uses one fixed demo person.
+Home shows the banner. Get started shows the onboarding window. Press **Close** on each. Reload: they stay hidden for this person. Switch to the other person: both show again.

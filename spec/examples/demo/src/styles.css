@@ -9,6 +9,63 @@ body {
   margin: 0;
 }
 
+.app {
+  min-height: 100vh;
+}
+
+.app.user-one {
+  background: #ffe8d6;
+}
+
+.app.user-two {
+  background: #d9e8ff;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  font-family: system-ui, sans-serif;
+}
+
+.who strong {
+  font-size: 1.4rem;
+}
+
+.user-one .who {
+  background: #ff8a3d;
+  color: #2a1200;
+}
+
+.user-two .who {
+  background: #3d7eff;
+  color: #fff;
+}
+
+.who span {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.who button {
+  display: inline-block;
+  margin: 0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: #fff;
+  color: #1d1a16;
+  border: 2px solid transparent;
+  font-weight: 600;
+}
+
+.who button[aria-pressed="true"] {
+  border-color: #1d1a16;
+}
+
 .wrap {
   max-width: 40rem;
   margin: 0 auto;
