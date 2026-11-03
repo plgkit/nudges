@@ -68,7 +68,7 @@ export function connect(url?: string | null): SqlDB {
 
 export function migrate(db?: SqlDB | null, migrationsDir?: string | null): SqlDB {
   const database = db ?? getDefaultDb();
-  const directory = migrationsDir || findMigrationsDir();
+  const directory = packagedMigrationsDir(migrationsDir);
   database.exec(
     "CREATE TABLE IF NOT EXISTS plgkit_schema_migrations (version TEXT PRIMARY KEY)",
   );
@@ -254,28 +254,13 @@ function migrationFiles(directory: string): { version: string; path: string }[] 
   return found;
 }
 
-export function findMigrationsDir(): string {
-  const override = process.env.PLGKIT_MIGRATIONS_DIR?.trim();
-  if (override) {
-    if (fs.existsSync(override) && fs.statSync(override).isDirectory()) return override;
-    throw new PlgkitError("PLGKIT_MIGRATIONS_DIR is set, but that folder does not exist.");
+function packagedMigrationsDir(override?: string | null): string {
+  const chosen = (override || process.env.PLGKIT_MIGRATIONS_DIR || "").trim();
+  if (chosen) {
+    if (fs.existsSync(chosen) && fs.statSync(chosen).isDirectory()) return chosen;
+    throw new PlgkitError("Migrations folder does not exist: " + chosen);
   }
-  const starts = [path.dirname(fileURLToPath(import.meta.url)), process.cwd()];
-  const seen = new Set<string>();
-  for (const start of starts) {
-    let dir = start;
-    while (!seen.has(dir)) {
-      seen.add(dir);
-      const candidate = path.join(dir, "core", "migrations");
-      if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) return candidate;
-      const parent = path.dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-  throw new PlgkitError(
-    "Could not find the plgkit migrations folder (core/migrations). Run this from the nudges repo, or set PLGKIT_MIGRATIONS_DIR.",
-  );
+  return fileURLToPath(new URL("../migrations", import.meta.url));
 }
 
 function sqlStatements(text: string): string[] {

@@ -13,3 +13,6 @@ plgkit = "plgkit.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["plgkit*"]
+
+[tool.setuptools.package-data]
+plgkit = ["migrations/*.sql"]

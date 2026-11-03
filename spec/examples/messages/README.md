@@ -26,7 +26,7 @@ Each impression, click, and dismiss is a new row in the table `plgkit_events`. R
 
 `config.yml` has `database_url_env: PLGKIT_DATABASE_URL`. That value is the name of an environment variable, not the database address. The address can contain a password, so it does not go in the file you commit. If the variable is unset, plgkit uses a SQLite file named `plgkit_events.sqlite` in the folder the program was started from.
 
-`plgkit migrate` creates the table. The files are numbered (`0001_...sql`) and shared by Python, Go, and TypeScript, so the table is defined once. Run the command again later. It applies only new files.
+`plgkit migrate` creates the table. The SQL files are numbered (`0001_...sql`) and written once. Each language package ships a copy. Run the command again when you update plgkit. It only applies new files. You run it yourself.
 
 The browser POSTs `{ nudge_id, action, context }` to your own URL. `context` is an optional flat map. The browser never sends a user id we trust. One handler per language checks the body and writes the row:
 

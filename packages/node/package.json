@@ -8,7 +8,10 @@
     "node": ">=22.13.0"
   },
   "exports": "./src/index.ts",
+  "files": ["src", "migrations"],
   "scripts": {
+    "prepack": "node scripts/copy-migrations.js",
+    "pretest": "node scripts/copy-migrations.js",
     "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test test/*.test.ts",
     "migrate": "node --disable-warning=ExperimentalWarning --experimental-strip-types src/cli.ts migrate"
   }

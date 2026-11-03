@@ -16,6 +16,7 @@ import sys
 import threading
 import uuid
 from datetime import datetime, timezone
+from importlib.resources import files as resource_files
 from pathlib import Path
 
 DEFAULT_DATABASE_URL_ENV = "PLGKIT_DATABASE_URL"
@@ -79,7 +80,7 @@ def migrate(db=None, migrations_dir=None):
     """Create the events table. Safe to run again; new files are applied once."""
     if db is None:
         db = get_default_db()
-    directory = Path(migrations_dir) if migrations_dir else find_migrations_dir()
+    sources = _migration_sources(migrations_dir)
     with _lock:
         db.execute(
             "CREATE TABLE IF NOT EXISTS plgkit_schema_migrations (version TEXT PRIMARY KEY)"
@@ -88,10 +89,10 @@ def migrate(db=None, migrations_dir=None):
             row[0]
             for row in db.execute("SELECT version FROM plgkit_schema_migrations")
         }
-        for version, path in _migration_files(directory):
+        for version, text in sources:
             if version in applied:
                 continue
-            statements = _sql_statements(path.read_text(encoding="utf-8"))
+            statements = _sql_statements(text)
             db.execute("BEGIN")
             try:
                 for statement in statements:
@@ -162,31 +163,39 @@ def dismiss_contexts(db, user_id, nudge_id):
     return found
 
 
-def find_migrations_dir():
-    override = os.environ.get("PLGKIT_MIGRATIONS_DIR", "").strip()
-    if override:
-        path = Path(override)
-        if path.is_dir():
-            return path
+def _migration_sources(migrations_dir):
+    """SQL text for each migration, oldest first.
+
+    An explicit directory or PLGKIT_MIGRATIONS_DIR overrides the copy shipped
+    inside the package. There is no search up the filesystem.
+    """
+    directory = migrations_dir
+    if directory is None:
+        directory = os.environ.get("PLGKIT_MIGRATIONS_DIR", "").strip() or None
+    if directory:
+        return [
+            (version, path.read_text(encoding="utf-8"))
+            for version, path in _migration_files(Path(directory))
+        ]
+    root = resource_files("plgkit").joinpath("migrations")
+    found = []
+    try:
+        entries = list(root.iterdir())
+    except FileNotFoundError as exc:
         raise PlgkitError(
-            "PLGKIT_MIGRATIONS_DIR is set, but that folder does not exist."
+            "The plgkit package is missing its migration files. Rebuild the package."
+        ) from exc
+    for item in entries:
+        match = _MIGRATION_NAME.match(item.name)
+        if not match:
+            continue
+        found.append((match.group(1), item.read_text(encoding="utf-8")))
+    found.sort(key=lambda item: int(item[0]))
+    if not found:
+        raise PlgkitError(
+            "The plgkit package is missing its migration files. Rebuild the package."
         )
-    starts = [Path(__file__).resolve().parent, Path.cwd()]
-    seen = set()
-    for start in starts:
-        current = start
-        while current not in seen:
-            seen.add(current)
-            candidate = current / "core" / "migrations"
-            if candidate.is_dir():
-                return candidate
-            if current.parent == current:
-                break
-            current = current.parent
-    raise PlgkitError(
-        "Could not find the plgkit migrations folder (core/migrations). "
-        "Run this from the nudges repo, or set PLGKIT_MIGRATIONS_DIR."
-    )
+    return found
 
 
 def _record(action, nudge_id, event, db):

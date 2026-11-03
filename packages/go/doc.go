@@ -4,3 +4,5 @@
 // unset, plgkit uses a SQLite file, plgkit_events.sqlite, in the current
 // directory.
 package plgkit
+
+//go:generate go run ./cmd/copy-migrations

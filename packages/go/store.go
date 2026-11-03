@@ -3,13 +3,13 @@ package plgkit
 import (
 	"crypto/rand"
 	"database/sql"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"math"
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,6 +18,9 @@ import (
 
 	_ "modernc.org/sqlite"
 )
+
+//go:embed migrations/*.sql
+var migrationFS embed.FS
 
 const (
 	DefaultDatabaseURLEnv = "PLGKIT_DATABASE_URL"
@@ -225,12 +228,9 @@ func dismissContexts(db *sql.DB, userID, nudgeID string) ([]map[string]any, erro
 }
 
 func migrateLocked(db *sql.DB, dir string) error {
-	if dir == "" {
-		var err error
-		dir, err = findMigrationsDir()
-		if err != nil {
-			return err
-		}
+	files, err := loadMigrations(dir)
+	if err != nil {
+		return err
 	}
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS plgkit_schema_migrations (version TEXT PRIMARY KEY)`); err != nil {
 		return fail("Could not prepare migrations.")
@@ -254,23 +254,15 @@ func migrateLocked(db *sql.DB, dir string) error {
 	}
 	rows.Close()
 
-	files, err := migrationFiles(dir)
-	if err != nil {
-		return err
-	}
 	for _, file := range files {
 		if applied[file.version] {
 			continue
-		}
-		text, err := os.ReadFile(file.path)
-		if err != nil {
-			return fail("Could not read migration " + file.version + ".")
 		}
 		tx, err := db.Begin()
 		if err != nil {
 			return fail("Migration " + file.version + " failed.")
 		}
-		for _, statement := range sqlStatements(string(text)) {
+		for _, statement := range sqlStatements(file.sql) {
 			if _, err := tx.Exec(statement); err != nil {
 				_ = tx.Rollback()
 				return fail("Migration " + file.version + " failed.")
@@ -304,12 +296,22 @@ func connectUnlocked() (*sql.DB, error) {
 	return Connect("")
 }
 
-type migrationFile struct {
+type migrationSource struct {
 	version string
-	path    string
+	sql     string
 }
 
-func migrationFiles(dir string) ([]migrationFile, error) {
+func loadMigrations(dir string) ([]migrationSource, error) {
+	if strings.TrimSpace(dir) == "" {
+		dir = strings.TrimSpace(os.Getenv("PLGKIT_MIGRATIONS_DIR"))
+	}
+	if dir != "" {
+		return migrationsFromDir(dir)
+	}
+	return migrationsFromEmbed()
+}
+
+func migrationsFromDir(dir string) ([]migrationSource, error) {
 	info, err := os.Stat(dir)
 	if err != nil || !info.IsDir() {
 		return nil, fail("Migrations folder does not exist: " + dir)
@@ -318,7 +320,7 @@ func migrationFiles(dir string) ([]migrationFile, error) {
 	if err != nil {
 		return nil, fail("Could not read migrations.")
 	}
-	var found []migrationFile
+	var found []migrationSource
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -327,54 +329,48 @@ func migrationFiles(dir string) ([]migrationFile, error) {
 		if match == nil {
 			continue
 		}
-		found = append(found, migrationFile{version: match[1], path: filepath.Join(dir, entry.Name())})
+		text, err := os.ReadFile(filepath.Join(dir, entry.Name()))
+		if err != nil {
+			return nil, fail("Could not read migration " + match[1] + ".")
+		}
+		found = append(found, migrationSource{version: match[1], sql: string(text)})
 	}
+	return sortMigrations(found)
+}
+
+func migrationsFromEmbed() ([]migrationSource, error) {
+	entries, err := migrationFS.ReadDir("migrations")
+	if err != nil {
+		return nil, fail("The plgkit package is missing its migration files. Rebuild the package.")
+	}
+	var found []migrationSource
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		match := migrationName.FindStringSubmatch(entry.Name())
+		if match == nil {
+			continue
+		}
+		text, err := migrationFS.ReadFile("migrations/" + entry.Name())
+		if err != nil {
+			return nil, fail("Could not read migration " + match[1] + ".")
+		}
+		found = append(found, migrationSource{version: match[1], sql: string(text)})
+	}
+	return sortMigrations(found)
+}
+
+func sortMigrations(found []migrationSource) ([]migrationSource, error) {
 	sort.Slice(found, func(i, j int) bool {
 		a, _ := strconv.Atoi(found[i].version)
 		b, _ := strconv.Atoi(found[j].version)
 		return a < b
 	})
 	if len(found) == 0 {
-		return nil, fail("No migration files in " + dir + ".")
+		return nil, fail("No migration files found.")
 	}
 	return found, nil
-}
-
-func findMigrationsDir() (string, error) {
-	if override := strings.TrimSpace(os.Getenv("PLGKIT_MIGRATIONS_DIR")); override != "" {
-		info, err := os.Stat(override)
-		if err != nil || !info.IsDir() {
-			return "", fail("PLGKIT_MIGRATIONS_DIR is set, but that folder does not exist.")
-		}
-		return override, nil
-	}
-	starts := []string{}
-	if _, file, _, ok := runtime.Caller(0); ok {
-		starts = append(starts, filepath.Dir(file))
-	}
-	if cwd, err := os.Getwd(); err == nil {
-		starts = append(starts, cwd)
-	}
-	seen := map[string]bool{}
-	for _, start := range starts {
-		dir := start
-		for {
-			if seen[dir] {
-				break
-			}
-			seen[dir] = true
-			candidate := filepath.Join(dir, "core", "migrations")
-			if info, err := os.Stat(candidate); err == nil && info.IsDir() {
-				return candidate, nil
-			}
-			parent := filepath.Dir(dir)
-			if parent == dir {
-				break
-			}
-			dir = parent
-		}
-	}
-	return "", fail("Could not find the plgkit migrations folder (core/migrations). Run this from the nudges repo, or set PLGKIT_MIGRATIONS_DIR.")
 }
 
 func envVarName(configPath string) (string, error) {
