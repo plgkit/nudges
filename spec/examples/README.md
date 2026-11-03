@@ -31,12 +31,18 @@ Use `audiences.go` or `audiences.ts` instead of `audiences.py` if your app is Go
 3. The renderer shows that component.
 4. Clicks and dismisses are sent with POST to your endpoint.
 
+The React renderer is [`packages/react`](../../packages/react/README.md). It does not live in this folder. You pass a `decide` function that calls your backend and returns the list. The provider calls that function once for the page. Each slot then draws its own messages. `Banner` and `OnboardingModal` from that package match the two sample messages.
+
+```jsx
+const decide = (location) => yourBackend.decide(location);
+```
+
 ## Using it in a page
 
 The home banner is location `home`, surface `main-top`, component `Banner`. The slot sits a few layers down. The provider calls `decide("home")` once for every slot on this page.
 
 ```jsx
-<NudgeProvider location="home" endpoint="/api/nudges/events" context={{ organization_id: "acme" }} registry={{ Banner }}>
+<NudgeProvider location="home" endpoint="/api/nudges/events" context={{ organization_id: "acme" }} registry={{ Banner }} decide={decide}>
   <header>
     <div>
       <NudgeSurface surface="main-top" />
@@ -48,7 +54,7 @@ The home banner is location `home`, surface `main-top`, component `Banner`. The 
 The onboarding modal is location `get-started`, surface `modal`, component `OnboardingModal`.
 
 ```jsx
-<NudgeProvider location="get-started" endpoint="/api/nudges/events" context={{ organization_id: "acme" }} registry={{ OnboardingModal }}>
+<NudgeProvider location="get-started" endpoint="/api/nudges/events" context={{ organization_id: "acme" }} registry={{ OnboardingModal }} decide={decide}>
   <main>
     <NudgeSurface surface="modal" />
   </main>
