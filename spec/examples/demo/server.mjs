@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Migrate, start one demo backend, then Vite.
  * Run: ./server [--backend python|go|node]

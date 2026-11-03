@@ -6,7 +6,7 @@ You do not set a database address. Events go in `plgkit_events.sqlite` in this f
 
 ## Run everything
 
-From this folder (once: `npm install`):
+From this folder (once: `npm install`). The `server` scripts are executable in git; if your checkout says permission denied, run `chmod +x server`.
 
 ```
 ./server
