@@ -178,6 +178,25 @@ def dismiss(nudge_id, event, db=None):
     _record("dismiss", nudge_id, event, db)
 
 
+def undismiss(nudge_id, event, db=None):
+    """Dev-only: delete dismiss rows for this user and nudge so decide() can show it again."""
+    if not isinstance(nudge_id, str) or nudge_id == "":
+        return
+    if not isinstance(event, dict):
+        return
+    user_id = event.get("user_id")
+    if not isinstance(user_id, str) or user_id == "":
+        return
+    if db is None:
+        db = get_default_db()
+    with _lock:
+        db.execute(
+            "DELETE FROM plgkit_events "
+            "WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'",
+            (user_id, nudge_id),
+        )
+
+
 def count_impressions(db, user_id, nudge_id):
     with _lock:
         row = db.execute(

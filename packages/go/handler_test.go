@@ -121,6 +121,17 @@ func TestBadBodyWritesNothing(t *testing.T) {
 	}
 }
 
+func TestUndismissIsCLIOnly(t *testing.T) {
+	db := openTestDB(t)
+	body := map[string]any{"nudge_id": "n1", "action": "undismiss", "context": map[string]any{}}
+	if plgkit.HandleEvent(body, "u_1", nil) != 400 {
+		t.Fatal("status")
+	}
+	if len(eventRows(t, db)) != 0 {
+		t.Fatal("wrote a row")
+	}
+}
+
 func TestMissingUserIsIgnored(t *testing.T) {
 	db := openTestDB(t)
 	body := map[string]any{"nudge_id": "n1", "action": "dismiss", "context": map[string]any{"organization_id": "acme"}}

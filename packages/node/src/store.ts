@@ -187,6 +187,17 @@ export function dismiss(nudgeId: string, event: Record<string, unknown> | null, 
   record("dismiss", nudgeId, event, db);
 }
 
+/** Dev-only: delete dismiss rows for this user and nudge. */
+export function undismiss(nudgeId: string, event: Record<string, unknown> | null, db?: SqlDB | null): void {
+  if (typeof nudgeId !== "string" || nudgeId === "" || !event || typeof event !== "object") return;
+  const userId = event.user_id;
+  if (typeof userId !== "string" || userId === "") return;
+  const database = db ?? getDefaultDb();
+  database
+    .prepare("DELETE FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'")
+    .run(userId, nudgeId);
+}
+
 export function countImpressions(db: SqlDB, userId: string, nudgeId: string): number {
   const row = db
     .prepare(
@@ -234,7 +245,7 @@ function record(
     .prepare(
       "INSERT INTO plgkit_events (id, nudge_id, action, user_id, context, created_at) VALUES (?, ?, ?, ?, ?, ?)",
     )
-    .run(crypto.randomUUID(), nudgeId, action, userId, dumpContext(context), new Date().toISOString());
+    .run(crypto.randomUUID(), nudgeId, action, userId, dumpContext(context), utcTimestamp());
 }
 
 export function canon(value: unknown): { ok: true; value: null | string | number | boolean } | { ok: false } {
@@ -348,6 +359,17 @@ function sqlStatements(text: string): string[] {
     .split(";")
     .map((part) => part.trim())
     .filter((part) => part !== "");
+}
+
+function utcTimestamp(): string {
+  const now = new Date();
+  const micro = Number(process.hrtime.bigint() % 1_000_000n);
+  const pad = (value: number, width: number) => String(value).padStart(width, "0");
+  return (
+    `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1, 2)}-${pad(now.getUTCDate(), 2)}` +
+    `T${pad(now.getUTCHours(), 2)}:${pad(now.getUTCMinutes(), 2)}:${pad(now.getUTCSeconds(), 2)}.` +
+    `${pad(micro, 6)}Z`
+  );
 }
 
 function warnDefault(name: string): void {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { connect, decide, dismiss, impression, click, migrate, type SqlDB } from "../src/index.ts";
+import { connect, decide, dismiss, undismiss, impression, click, migrate, type SqlDB } from "../src/index.ts";
 
 function message(overrides: Record<string, unknown> = {}) {
   const base: Record<string, unknown> = {
@@ -97,6 +97,17 @@ test("dismiss scope", () => {
     decide("home", ctx({ plan: "free" }), [both], { db, config }).map((item) => item.id),
     ["banner"],
   );
+});
+
+test("undismiss cycle", () => {
+  const db = openDb();
+  const banner = message({ max_impressions: null });
+  dismiss("banner", { user_id: "u_123" }, db);
+  assert.deepEqual(decide("home", ctx(), [banner], { db, config }), []);
+  undismiss("banner", { user_id: "u_123" }, db);
+  assert.deepEqual(decide("home", ctx(), [banner], { db, config }).map((item) => item.id), ["banner"]);
+  dismiss("banner", { user_id: "u_123" }, db);
+  assert.deepEqual(decide("home", ctx(), [banner], { db, config }), []);
 });
 
 test("active window and unknown audience", () => {

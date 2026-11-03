@@ -174,6 +174,32 @@ func Dismiss(nudgeID string, event map[string]any) error {
 	return record("dismiss", nudgeID, event, nil)
 }
 
+// Undismiss deletes dismiss rows for this user and nudge. Dev-only CLI helper.
+func Undismiss(nudgeID string, event map[string]any) error {
+	if nudgeID == "" || event == nil {
+		return nil
+	}
+	userID, _ := event["user_id"].(string)
+	if userID == "" {
+		return nil
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	db, err := openDefaultLocked()
+	if err != nil {
+		return err
+	}
+	_, err = dbExec(
+		db,
+		`DELETE FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'`,
+		userID, nudgeID,
+	)
+	if err != nil {
+		return fail("Could not update events.")
+	}
+	return nil
+}
+
 func record(action, nudgeID string, event map[string]any, db *sql.DB) error {
 	if nudgeID == "" || event == nil {
 		return nil

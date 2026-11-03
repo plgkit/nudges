@@ -99,7 +99,7 @@ function isDismissed(db: SqlDB, userId: string, message: Message, ctx: unknown):
   // equal values. A row missing a scoped key does not match. If ctx is missing
   // a scoped key, no row matches, so the message can show.
   if (!userId) return false;
-  const rows = dismissContexts(db, userId, message.id);
+  const rows = dismissContexts(db, userId, message.id as string);
   if (!("dismiss_scope" in message) || message.dismiss_scope == null) return rows.length > 0;
   const scope = message.dismiss_scope as string[];
   const ctxValues: Record<string, unknown> = {};

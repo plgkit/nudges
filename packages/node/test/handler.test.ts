@@ -117,6 +117,12 @@ test("bad body writes nothing", () => {
   assert.deepEqual(rows(db), []);
 });
 
+test("undismiss is cli only", () => {
+  const db = openDb();
+  assert.equal(handleEvent({ nudge_id: "n1", action: "undismiss", context: {} }, "u_1", {}, db), 400);
+  assert.deepEqual(rows(db), []);
+});
+
 test("missing user is ignored", () => {
   const db = openDb();
   const body = { nudge_id: "n1", action: "dismiss", context: { organization_id: "acme" } };
