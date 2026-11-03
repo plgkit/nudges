@@ -1,0 +1,17 @@
+# In your app, this file lives at plgkit/nudges/config.yml. It is Nudges-only.
+# decide() joins relative `asset` values in render_props with assets_base_url before returning.
+assets_base_url: "/static/nudges/"
+
+# Per location. Surface maxes apply only inside that location.
+# A location not listed has max 1. A surface not listed under its location has max 1.
+# plgkit validate (follow-up PR) flags a surface max greater than its location max as unreachable.
+locations:
+  home:
+    max: 2
+    surfaces:
+      main-top:
+        max: 2
+      modal:
+        max: 1
+  get-started:
+    max: 1
