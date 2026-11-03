@@ -1,0 +1,15 @@
+{
+  "name": "plgkit",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "PLGKit nudges: choose what to show, and save impression, click, and dismiss events.",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "exports": "./src/index.ts",
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test test/*.test.ts",
+    "migrate": "node --disable-warning=ExperimentalWarning --experimental-strip-types src/cli.ts migrate"
+  }
+}

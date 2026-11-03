@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plgkit"
+version = "0.0.1"
+description = "PLGKit nudges: choose what to show, and save impression, click, and dismiss events."
+requires-python = ">=3.10"
+
+[project.scripts]
+plgkit = "plgkit.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["plgkit*"]
