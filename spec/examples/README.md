@@ -31,7 +31,7 @@ Use `audiences.go` or `audiences.ts` instead of `audiences.py` if your app is Go
 3. The renderer shows that component.
 4. Clicks and dismisses are sent with POST to your endpoint.
 
-The React renderer is [`packages/react`](../../packages/react/README.md). It does not live in this folder. You pass a `decide` function that calls your backend and returns the list. The provider calls that function once for the page. Each slot then draws its own messages. `Banner` and `OnboardingModal` from that package match the two sample messages.
+The React renderer is [`packages/react`](../../packages/react/README.md). It does not live in this folder. You pass a `decide` function that calls your backend and returns the list. The provider calls that function once for the page. Each slot then draws its own messages. `Banner` and `OnboardingModal` from that package match the two sample messages. To see that in the browser, run the [demo](demo/README.md).
 
 ```jsx
 const decide = (location, context) => yourBackend.decide(location, context);
