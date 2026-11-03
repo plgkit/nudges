@@ -24,7 +24,7 @@ Each impression, click, and dismiss is a new row in the table `plgkit_events`. R
 
 `decide()` counts impression rows for this user and this nudge and compares that count to `max_impressions`. For a dismissal, it loads this user's dismiss rows for that nudge and compares them in code. No `dismiss_scope` means any of those rows hides the message. With `dismiss_scope`, every listed key must be present on `ctx` and on the row, with the same values. A row missing a listed key does not count. If `ctx` is missing a listed key, nothing matches, so the message can show.
 
-`config.yml` has `database_url_env: PLGKIT_DATABASE_URL`. That value is the name of an environment variable, not the database address. The address can contain a password, so it does not go in the file you commit. If the variable is unset, plgkit uses a SQLite file named `plgkit_events.sqlite` in the folder the program was started from.
+`config.yml` has `database_url_env: PLGKIT_DATABASE_URL`. That value is the name of an environment variable, not the database address. The address can contain a password, so it does not go in the file you commit. It can be a SQLite address or a Postgres address (`postgres://` or `postgresql://`). If the variable is unset, plgkit uses a SQLite file named `plgkit_events.sqlite` in the folder the program was started from.
 
 `plgkit migrate` creates the table. The SQL files are numbered (`0001_...sql`) and written once. Each language package ships a copy. Run the command again when you update plgkit. It only applies new files. You run it yourself.
 

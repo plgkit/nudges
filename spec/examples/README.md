@@ -34,7 +34,7 @@ Use `audiences.go` or `audiences.ts` instead of `audiences.py` if your app is Go
 ## Setup
 
 1. In `config.yml`, `database_url_env` is the name of an environment variable. It is not the database address. The address can contain a password, so it stays out of the file you commit.
-2. Set that variable. For the sample config the name is `PLGKIT_DATABASE_URL`. If you leave it unset, plgkit uses a SQLite file named `plgkit_events.sqlite` in the folder you started the program from. That is enough to try things out.
+2. Set that variable to a SQLite address or a Postgres address (`postgres://` or `postgresql://`). For the sample config the name is `PLGKIT_DATABASE_URL`. If you leave it unset, plgkit uses a SQLite file named `plgkit_events.sqlite` in the folder you started the program from. That is enough to try things out.
 3. Run `plgkit migrate`. This creates the `plgkit_events` table. Run it again when you update plgkit. It only applies new numbered files.
 
    Python is the default: `plgkit migrate` (from this repo: `python -m plgkit migrate` in `packages/python`).

@@ -3,12 +3,14 @@
  *
  * The database address lives in an environment variable named by
  * `database_url_env` in config.yml. The address can contain a password, so it
- * is never written into config. If that variable is unset, we use a SQLite
- * file, `plgkit_events.sqlite`, in the current directory.
+ * is never written into config. A postgres:// or postgresql:// address uses
+ * Postgres. If that variable is unset, we use a SQLite file,
+ * `plgkit_events.sqlite`, in the current directory.
  */
 import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
+import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 
 export const DEFAULT_DATABASE_URL_ENV = "PLGKIT_DATABASE_URL";
@@ -30,6 +32,7 @@ export type SqlDB = {
     get(...params: unknown[]): unknown;
     all(...params: unknown[]): unknown[];
   };
+  close?(): void;
 };
 
 let defaultDb: SqlDB | null = null;
@@ -44,11 +47,13 @@ export function resolveDatabaseURL(
   const name = envVarName(configPath);
   const value = String(env[name] ?? "").trim();
   if (!value) return { url: DEFAULT_DATABASE_URL, usedDefault: true };
-  if (value.startsWith("sqlite:")) return { url: value, usedDefault: false };
-  const scheme = value.includes("://") ? value.split("://", 1)[0] : "unknown";
+  const scheme = schemeOf(value);
+  if (scheme === "sqlite" || scheme === "postgres" || scheme === "postgresql") {
+    return { url: value, usedDefault: false };
+  }
   throw new PlgkitError(
     `${name} uses the ${JSON.stringify(scheme)} scheme. ` +
-      "This version of plgkit supports SQLite only, for example sqlite:///plgkit_events.sqlite. " +
+      "plgkit supports SQLite (sqlite:///plgkit_events.sqlite) and Postgres (postgres:// or postgresql://). " +
       "Unset the variable to use the local SQLite file.",
   );
 }
@@ -60,10 +65,74 @@ export function connect(url?: string | null): SqlDB {
     resolved = found.url;
     if (found.usedDefault) warnDefault(envVarName(null));
   }
+  const scheme = schemeOf(resolved);
+  if (scheme === "sqlite") return openSqlite(resolved);
+  if (scheme === "postgres" || scheme === "postgresql") return openPostgres(resolved);
+  throw new PlgkitError(
+    `Unsupported database scheme ${JSON.stringify(scheme)}. Use a SQLite URL or a Postgres URL (postgres:// or postgresql://).`,
+  );
+}
+
+function openSqlite(url: string): SqlDB {
   silenceSqliteWarning();
-  const db = new DatabaseSync(sqlitePath(resolved)) as unknown as SqlDB;
+  const db = new DatabaseSync(sqlitePath(url));
   db.exec("PRAGMA busy_timeout = 5000");
-  return db;
+  return db as unknown as SqlDB;
+}
+
+function openPostgres(url: string): SqlDB {
+  const readySab = new SharedArrayBuffer(4);
+  const ready = new Int32Array(readySab);
+  const worker = new Worker(new URL("./pg-worker.js", import.meta.url), {
+    workerData: { url, ready: readySab },
+  });
+  Atomics.wait(ready, 0, 0, 10000);
+  if (Atomics.load(ready, 0) !== 1) {
+    worker.terminate();
+    throw new PlgkitError("Could not open the database.");
+  }
+  return postgresDb(worker);
+}
+
+function postgresDb(worker: Worker): SqlDB {
+  const ask = (sql: string, params: unknown[]): unknown[] => {
+    const sab = new SharedArrayBuffer(256 * 1024);
+    const view = new Int32Array(sab);
+    worker.postMessage({ sql: postgresSQL(sql), params, sab });
+    Atomics.wait(view, 0, 0, 30000);
+    const status = Atomics.load(view, 0);
+    if (status !== 1) throw new PlgkitError("Could not run the database statement.");
+    const length = Atomics.load(view, 1);
+    const text = Buffer.from(sab).subarray(8, 8 + length).toString("utf8");
+    const rows = text ? JSON.parse(text) : [];
+    return Array.isArray(rows) ? rows : [];
+  };
+  return {
+    exec(sql: string) {
+      ask(sql, []);
+    },
+    prepare(sql: string) {
+      return {
+        run(...params: unknown[]) {
+          ask(sql, params);
+        },
+        get(...params: unknown[]) {
+          return ask(sql, params)[0];
+        },
+        all(...params: unknown[]) {
+          return ask(sql, params);
+        },
+      };
+    },
+    close() {
+      worker.terminate();
+    },
+  };
+}
+
+function postgresSQL(sql: string): string {
+  let n = 0;
+  return sql.replace(/\?/g, () => `$${++n}`);
 }
 
 export function migrate(db?: SqlDB | null, migrationsDir?: string | null): SqlDB {
@@ -224,6 +293,13 @@ function parseDatabaseURLEnv(text: string): string | null {
   if (found.length === 0) return null;
   if (found.length > 1) throw new PlgkitError("database_url_env is set more than once in config.yml.");
   return found[0];
+}
+
+function schemeOf(url: string): string {
+  if (url.startsWith("sqlite:")) return "sqlite";
+  const mark = url.indexOf("://");
+  if (mark >= 0) return url.slice(0, mark).toLowerCase();
+  return "unknown";
 }
 
 function sqlitePath(url: string): string {

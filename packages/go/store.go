@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "modernc.org/sqlite"
 )
 
@@ -35,6 +36,7 @@ var (
 	warnMu         sync.Mutex
 	defaultDB      *sql.DB
 	warnedDefault  bool
+	dialects       sync.Map
 )
 
 // Error is a problem the developer should read, such as a bad database setting.
@@ -44,9 +46,10 @@ func (e *Error) Error() string { return e.Msg }
 
 func fail(msg string) error { return &Error{Msg: msg} }
 
-// ResolveDatabaseURL returns the SQLite URL and whether it is the local default.
+// ResolveDatabaseURL returns the database URL and whether it is the local SQLite default.
 // environ == nil reads the process environment. A non-nil map is used instead,
-// including when it is empty. Error text never includes the URL.
+// including when it is empty. SQLite and Postgres URLs are accepted.
+// Error text never includes the URL.
 func ResolveDatabaseURL(configPath string, environ map[string]string) (string, bool, error) {
 	name, err := envVarName(configPath)
 	if err != nil {
@@ -62,20 +65,17 @@ func ResolveDatabaseURL(configPath string, environ map[string]string) (string, b
 	if value == "" {
 		return DefaultDatabaseURL, true, nil
 	}
-	if strings.HasPrefix(value, "sqlite:") {
+	scheme := schemeOf(value)
+	if scheme == "sqlite" || scheme == "postgres" || scheme == "postgresql" {
 		return value, false, nil
 	}
-	scheme := "unknown"
-	if i := strings.Index(value, "://"); i >= 0 {
-		scheme = value[:i]
-	}
 	return "", false, fail(fmt.Sprintf(
-		"%s uses the %q scheme. This version of plgkit supports SQLite only, for example sqlite:///plgkit_events.sqlite. Unset the variable to use the local SQLite file.",
+		"%s uses the %q scheme. plgkit supports SQLite (sqlite:///plgkit_events.sqlite) and Postgres (postgres:// or postgresql://). Unset the variable to use the local SQLite file.",
 		name, scheme,
 	))
 }
 
-// Connect opens SQLite. An empty url reads config and the environment.
+// Connect opens SQLite or Postgres. An empty url reads config and the environment.
 func Connect(url string) (*sql.DB, error) {
 	if url == "" {
 		resolved, usedDefault, err := ResolveDatabaseURL("", nil)
@@ -87,24 +87,54 @@ func Connect(url string) (*sql.DB, error) {
 		}
 		url = resolved
 	}
+	switch schemeOf(url) {
+	case "sqlite":
+		return openSQLite(url)
+	case "postgres", "postgresql":
+		return openPostgres(url)
+	default:
+		return nil, fail(fmt.Sprintf(
+			"Unsupported database scheme %q. Use a SQLite URL or a Postgres URL (postgres:// or postgresql://).",
+			schemeOf(url),
+		))
+	}
+}
+
+func openSQLite(url string) (*sql.DB, error) {
 	path, err := sqlitePath(url)
 	if err != nil {
 		return nil, err
 	}
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
-		return nil, fail("Could not open the SQLite database.")
+		return nil, fail("Could not open the database.")
 	}
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
 		_ = db.Close()
-		return nil, fail("Could not open the SQLite database.")
+		return nil, fail("Could not open the database.")
 	}
 	if err := db.Ping(); err != nil {
 		_ = db.Close()
-		return nil, fail("Could not open the SQLite database.")
+		return nil, fail("Could not open the database.")
 	}
+	dialects.Store(db, "sqlite")
+	return db, nil
+}
+
+func openPostgres(url string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", url)
+	if err != nil {
+		return nil, fail("Could not open the database.")
+	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+	if err := db.Ping(); err != nil {
+		_ = db.Close()
+		return nil, fail("Could not open the database.")
+	}
+	dialects.Store(db, "postgres")
 	return db, nil
 }
 
@@ -174,7 +204,8 @@ func record(action, nudgeID string, event map[string]any, db *sql.DB) error {
 			return err
 		}
 	}
-	_, err = db.Exec(
+	_, err = dbExec(
+		db,
 		`INSERT INTO plgkit_events (id, nudge_id, action, user_id, context, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
 		newID(), nudgeID, action, userID, raw, time.Now().UTC().Format("2006-01-02T15:04:05.000000Z"),
 	)
@@ -188,7 +219,8 @@ func countImpressions(db *sql.DB, userID, nudgeID string) (int, error) {
 	mu.Lock()
 	defer mu.Unlock()
 	var n int
-	err := db.QueryRow(
+	err := dbQueryRow(
+		db,
 		`SELECT COUNT(*) FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'impression'`,
 		userID, nudgeID,
 	).Scan(&n)
@@ -201,7 +233,8 @@ func countImpressions(db *sql.DB, userID, nudgeID string) (int, error) {
 func dismissContexts(db *sql.DB, userID, nudgeID string) ([]map[string]any, error) {
 	mu.Lock()
 	defer mu.Unlock()
-	rows, err := db.Query(
+	rows, err := dbQuery(
+		db,
 		`SELECT context FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'`,
 		userID, nudgeID,
 	)
@@ -263,12 +296,12 @@ func migrateLocked(db *sql.DB, dir string) error {
 			return fail("Migration " + file.version + " failed.")
 		}
 		for _, statement := range sqlStatements(file.sql) {
-			if _, err := tx.Exec(statement); err != nil {
+			if _, err := tx.Exec(rewriteQuery(db, statement)); err != nil {
 				_ = tx.Rollback()
 				return fail("Migration " + file.version + " failed.")
 			}
 		}
-		if _, err := tx.Exec(`INSERT INTO plgkit_schema_migrations (version) VALUES (?)`, file.version); err != nil {
+		if _, err := tx.Exec(rewriteQuery(db, `INSERT INTO plgkit_schema_migrations (version) VALUES (?)`), file.version); err != nil {
 			_ = tx.Rollback()
 			return fail("Migration " + file.version + " failed.")
 		}
@@ -359,6 +392,47 @@ func migrationsFromEmbed() ([]migrationSource, error) {
 		found = append(found, migrationSource{version: match[1], sql: string(text)})
 	}
 	return sortMigrations(found)
+}
+
+func dbExec(db *sql.DB, query string, args ...any) (sql.Result, error) {
+	return db.Exec(rewriteQuery(db, query), args...)
+}
+
+func dbQuery(db *sql.DB, query string, args ...any) (*sql.Rows, error) {
+	return db.Query(rewriteQuery(db, query), args...)
+}
+
+func dbQueryRow(db *sql.DB, query string, args ...any) *sql.Row {
+	return db.QueryRow(rewriteQuery(db, query), args...)
+}
+
+func rewriteQuery(db *sql.DB, query string) string {
+	kind, _ := dialects.Load(db)
+	if kind != "postgres" {
+		return query
+	}
+	var b strings.Builder
+	n := 0
+	for _, r := range query {
+		if r == '?' {
+			n++
+			b.WriteByte('$')
+			b.WriteString(strconv.Itoa(n))
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
+func schemeOf(url string) string {
+	if strings.HasPrefix(strings.ToLower(url), "sqlite:") {
+		return "sqlite"
+	}
+	if i := strings.Index(url, "://"); i >= 0 {
+		return strings.ToLower(url[:i])
+	}
+	return "unknown"
 }
 
 func sortMigrations(found []migrationSource) ([]migrationSource, error) {

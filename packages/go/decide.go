@@ -10,14 +10,15 @@ import (
 // Options are the extra inputs to Decide. Zero values are fine.
 type Options struct {
 	DB        *sql.DB
-	Audiences map[string]func(any) bool
+	Audiences map[string]func(map[string]any) bool
 	Config    map[string]any
 	Now       time.Time
 }
 
 // Decide returns the winners for one location. messages are the ones you already
-// loaded. user id is read from ctx["user"]["id"]. Decide only reads the events table.
-func Decide(location string, ctx any, messages []map[string]any, opts Options) ([]map[string]any, error) {
+// loaded. ctx is a map: user id is ctx["user"]["id"], and other facts such as
+// organization_id sit beside user. Decide only reads the events table.
+func Decide(location string, ctx map[string]any, messages []map[string]any, opts Options) ([]map[string]any, error) {
 	if location == "" || len(messages) == 0 {
 		return []map[string]any{}, nil
 	}
@@ -123,12 +124,16 @@ func Decide(location string, ctx any, messages []map[string]any, opts Options) (
 	return out, nil
 }
 
-func userIDOf(ctx any) string {
+func userIDOf(ctx map[string]any) string {
 	user, ok := lookup(ctx, "user")
 	if !ok {
 		return ""
 	}
-	id, ok := lookup(user, "id")
+	userMap, ok := user.(map[string]any)
+	if !ok {
+		return ""
+	}
+	id, ok := lookup(userMap, "id")
 	if !ok {
 		return ""
 	}
@@ -139,16 +144,15 @@ func userIDOf(ctx any) string {
 	return text
 }
 
-func lookup(obj any, key string) (any, bool) {
-	m, ok := obj.(map[string]any)
-	if !ok {
+func lookup(obj map[string]any, key string) (any, bool) {
+	if obj == nil {
 		return nil, false
 	}
-	value, ok := m[key]
+	value, ok := obj[key]
 	return value, ok
 }
 
-func isDismissed(db *sql.DB, userID string, message map[string]any, ctx any) (bool, error) {
+func isDismissed(db *sql.DB, userID string, message map[string]any, ctx map[string]any) (bool, error) {
 	// No dismiss_scope: any dismiss row for this user and nudge matches.
 	// With dismiss_scope: every listed key must be on ctx and on the row, with
 	// equal values. A row missing a scoped key does not match. If ctx is missing
@@ -276,7 +280,7 @@ func isActive(message map[string]any, now time.Time) bool {
 	return true
 }
 
-func audienceMatches(message map[string]any, ctx any, audiences map[string]func(any) bool) bool {
+func audienceMatches(message map[string]any, ctx map[string]any, audiences map[string]func(map[string]any) bool) bool {
 	raw, ok := message["audience"]
 	if !ok || raw == nil {
 		return true
@@ -340,7 +344,7 @@ func nameList(spec map[string]any, key string) ([]string, bool) {
 	return stringList(raw)
 }
 
-func callAudience(audiences map[string]func(any) bool, name string, ctx any) (result audienceResult) {
+func callAudience(audiences map[string]func(map[string]any) bool, name string, ctx map[string]any) (result audienceResult) {
 	fn := audiences[name]
 	if fn == nil {
 		return audienceResult{}

@@ -158,11 +158,27 @@ test("config rejects a url without echoing the password", () => {
       return true;
     },
   );
+  const accepted = resolveDatabaseURL(undefined, {
+    PLGKIT_DATABASE_URL: "postgresql://user:secret-password@localhost/db",
+  });
+  assert.equal(accepted.usedDefault, false);
+  assert.equal(accepted.url.startsWith("postgresql://"), true);
   assert.throws(
-    () => resolveDatabaseURL(undefined, { PLGKIT_DATABASE_URL: "postgres://user:secret-password@localhost/db" }),
+    () => resolveDatabaseURL(undefined, { PLGKIT_DATABASE_URL: "mysql://user:secret-password@localhost/db" }),
     (err: unknown) => {
-      assert.equal(String(err).includes("secret-password"), false);
-      assert.equal(String(err).includes("postgres"), true);
+      const text = String(err);
+      assert.equal(text.includes("secret-password"), false);
+      assert.equal(text.includes("mysql://"), false);
+      assert.equal(text.includes("mysql"), true);
+      return true;
+    },
+  );
+  assert.throws(
+    () => connect("postgres://user:secret-password@127.0.0.1:1/db"),
+    (err: unknown) => {
+      const text = String(err);
+      assert.equal(text.includes("secret-password"), false);
+      assert.equal(text.includes("postgres://"), false);
       return true;
     },
   );

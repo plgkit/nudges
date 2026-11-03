@@ -180,12 +180,22 @@ class HandlerTests(unittest.TestCase):
         self.assertNotIn("secret-password", text)
         self.assertIn("environment variable", text)
 
+        url, used_default = plgkit.resolve_database_url(
+            environ={"PLGKIT_DATABASE_URL": "postgres://user:secret-password@localhost/db"}
+        )
+        self.assertFalse(used_default)
+        self.assertTrue(url.startswith("postgres://"))
         with self.assertRaises(plgkit.PlgkitError) as caught:
             plgkit.resolve_database_url(
-                environ={"PLGKIT_DATABASE_URL": "postgres://user:secret-password@localhost/db"}
+                environ={"PLGKIT_DATABASE_URL": "mysql://user:secret-password@localhost/db"}
             )
         self.assertNotIn("secret-password", str(caught.exception))
-        self.assertIn("postgres", str(caught.exception))
+        self.assertNotIn("mysql://", str(caught.exception))
+        self.assertIn("mysql", str(caught.exception))
+        with self.assertRaises(plgkit.PlgkitError) as caught:
+            plgkit.connect("postgres://user:secret-password@127.0.0.1:1/db")
+        self.assertNotIn("secret-password", str(caught.exception))
+        self.assertNotIn("postgres://", str(caught.exception))
 
     def test_unset_env_uses_the_sqlite_file(self):
         url, used_default = plgkit.resolve_database_url(environ={})

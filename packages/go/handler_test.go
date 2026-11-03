@@ -181,11 +181,21 @@ func TestConfigRejectsAURLWithoutEchoingThePassword(t *testing.T) {
 	if err == nil || strings.Contains(err.Error(), "secret-password") || !strings.Contains(err.Error(), "environment variable") {
 		t.Fatal(err)
 	}
-	_, _, err = plgkit.ResolveDatabaseURL("", map[string]string{
-		"PLGKIT_DATABASE_URL": "postgres://user:secret-password@localhost/db",
+	url, usedDefault, err := plgkit.ResolveDatabaseURL("", map[string]string{
+		"PLGKIT_DATABASE_URL": "postgresql://user:secret-password@localhost/db",
 	})
-	if err == nil || strings.Contains(err.Error(), "secret-password") || !strings.Contains(err.Error(), "postgres") {
-		t.Fatal(err)
+	if err != nil || usedDefault || !strings.HasPrefix(url, "postgresql://") {
+		t.Fatal("postgres URL should be accepted")
+	}
+	_, _, err = plgkit.ResolveDatabaseURL("", map[string]string{
+		"PLGKIT_DATABASE_URL": "mysql://user:secret-password@localhost/db",
+	})
+	if err == nil || strings.Contains(err.Error(), "secret-password") || strings.Contains(err.Error(), "mysql://") || !strings.Contains(err.Error(), "mysql") {
+		t.Fatal("mysql error leaked or was unclear")
+	}
+	_, err = plgkit.Connect("postgres://user:secret-password@127.0.0.1:1/db")
+	if err == nil || strings.Contains(err.Error(), "secret-password") || strings.Contains(err.Error(), "postgres://") {
+		t.Fatal("connect error leaked the URL")
 	}
 }
 

@@ -228,7 +228,7 @@ func TestActiveWindowAndUnknownAudience(t *testing.T) {
 		"audience":        map[string]any{"require_all": []string{"missing_fn"}},
 	})
 	opts.Now = time.Time{}
-	opts.Audiences = map[string]func(any) bool{}
+	opts.Audiences = map[string]func(map[string]any) bool{}
 	shown, err = plgkit.Decide("home", testCtx(nil), []map[string]any{unknown}, opts)
 	if err != nil || len(shown) != 0 {
 		t.Fatalf("unknown %#v %v", shown, err)

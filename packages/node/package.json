@@ -8,7 +8,13 @@
     "node": ">=22.13.0"
   },
   "exports": "./src/index.ts",
-  "files": ["src", "migrations"],
+  "files": [
+    "src",
+    "migrations"
+  ],
+  "dependencies": {
+    "pg": "^8.23.1"
+  },
   "scripts": {
     "prepack": "node scripts/copy-migrations.js",
     "pretest": "node scripts/copy-migrations.js",

@@ -2,8 +2,9 @@
 
 The database address lives in an environment variable named by
 `database_url_env` in config.yml. The address can contain a password, so it
-is never written into config. If that variable is unset, we use a SQLite
-file, `plgkit_events.sqlite`, in the current directory.
+is never written into config. A `postgres://` or `postgresql://` address uses
+Postgres. If that variable is unset, we use a SQLite file,
+`plgkit_events.sqlite`, in the current directory.
 """
 
 from __future__ import annotations
@@ -38,9 +39,9 @@ def resolve_database_url(config_path=None, environ=None):
     """Return `(url, used_default)`.
 
     `used_default` is true when the env var was unset and the URL is the
-    local SQLite file. The URL from the environment is returned as-is only
-    when it is a SQLite URL. Other schemes raise PlgkitError. The error text
-    never includes the URL, because it can contain a password.
+    local SQLite file. SQLite and Postgres URLs are accepted. Other schemes
+    raise PlgkitError. The error text never includes the URL, because it can
+    contain a password.
     """
     env = os.environ if environ is None else environ
     name = _env_var_name(config_path)
@@ -50,30 +51,69 @@ def resolve_database_url(config_path=None, environ=None):
     value = value.strip()
     if not value:
         return DEFAULT_DATABASE_URL, True
-    if value.startswith("sqlite:"):
+    scheme = _scheme(value)
+    if scheme in ("sqlite", "postgres", "postgresql"):
         return value, False
-    scheme = value.split("://", 1)[0] if "://" in value else "unknown"
     raise PlgkitError(
         f"{name} uses the {scheme!r} scheme. "
-        "This version of plgkit supports SQLite only, for example "
-        "sqlite:///plgkit_events.sqlite. "
+        "plgkit supports SQLite (sqlite:///plgkit_events.sqlite) and Postgres "
+        "(postgres:// or postgresql://). "
         "Unset the variable to use the local SQLite file."
     )
 
 
 def connect(url=None):
-    """Open a SQLite connection. `url=None` reads config and the environment."""
+    """Open SQLite or Postgres. `url=None` reads config and the environment."""
     if url is None:
         url, used_default = resolve_database_url()
         if used_default:
             _warn_default(_env_var_name(None))
+    scheme = _scheme(url)
+    if scheme == "sqlite":
+        return _connect_sqlite(url)
+    if scheme in ("postgres", "postgresql"):
+        return _connect_postgres(url)
+    raise PlgkitError(
+        f"Unsupported database scheme {scheme!r}. "
+        "Use a SQLite URL or a Postgres URL (postgres:// or postgresql://)."
+    )
+
+
+def _connect_sqlite(url):
     path = _sqlite_path(url)
     try:
         conn = sqlite3.connect(path, check_same_thread=False, isolation_level=None)
-    except sqlite3.Error as exc:
-        raise PlgkitError("Could not open the SQLite database.") from exc
+    except sqlite3.Error:
+        raise PlgkitError("Could not open the database.")
     conn.execute("PRAGMA busy_timeout = 5000")
     return conn
+
+
+def _connect_postgres(url):
+    try:
+        import psycopg
+    except ImportError:
+        raise PlgkitError("Postgres needs the psycopg package. Install it with: pip install psycopg")
+    try:
+        conn = psycopg.connect(url, autocommit=True, connect_timeout=5)
+    except Exception:
+        raise PlgkitError("Could not open the database.")
+    return _PostgresDB(conn)
+
+
+class _PostgresDB:
+    """Same execute() shape as sqlite3, with Postgres placeholders."""
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def execute(self, sql, params=()):
+        if params:
+            return self._conn.execute(sql.replace("?", "%s"), params)
+        return self._conn.execute(sql.replace("?", "%s"))
+
+    def close(self):
+        self._conn.close()
 
 
 def migrate(db=None, migrations_dir=None):
@@ -102,9 +142,12 @@ def migrate(db=None, migrations_dir=None):
                     (version,),
                 )
                 db.execute("COMMIT")
-            except sqlite3.Error as exc:
-                db.execute("ROLLBACK")
-                raise PlgkitError(f"Migration {version} failed.") from exc
+            except Exception:
+                try:
+                    db.execute("ROLLBACK")
+                except Exception:
+                    pass
+                raise PlgkitError(f"Migration {version} failed.")
     return db
 
 
@@ -290,6 +333,16 @@ def _parse_database_url_env(text):
     if len(found) > 1:
         raise PlgkitError("database_url_env is set more than once in config.yml.")
     return found[0]
+
+
+def _scheme(url):
+    if not isinstance(url, str) or not url:
+        return "unknown"
+    if url.startswith("sqlite:"):
+        return "sqlite"
+    if "://" in url:
+        return url.split("://", 1)[0].lower()
+    return "unknown"
 
 
 def _sqlite_path(url):
