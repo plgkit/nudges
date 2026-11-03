@@ -25,8 +25,8 @@ type User struct {
 // Context is the value you pass to decide.
 type Context struct {
 	User           User
-	Req            any    // your framework's request object, if you need it
-	OrganizationID string // flat ctx key "organization_id", for example dismiss_scope
+	Req            any     // your framework's request object, if you need it
+	OrganizationID *string // flat ctx key "organization_id"; nil means missing, for example dismiss_scope
 }
 
 func speciesOf(user User) string {
