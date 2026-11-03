@@ -1,0 +1,116 @@
+:root {
+  color: #1d1a16;
+  background: #f4f1ea;
+  font-family: Georgia, "Iowan Old Style", serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+}
+
+.wrap {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-family: system-ui, sans-serif;
+}
+
+nav a {
+  color: #1d1a16;
+}
+
+nav a[aria-current="page"] {
+  font-weight: 700;
+}
+
+h1 {
+  font-size: 2rem;
+  margin: 0 0 0.4rem;
+}
+
+header {
+  margin-bottom: 1.5rem;
+}
+
+main {
+  margin-bottom: 1.5rem;
+}
+
+aside,
+.nudge-modal [role="dialog"] {
+  background: #fff;
+  border: 1px solid #e3dcd0;
+  border-radius: 12px;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.nudge-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 1.25rem;
+  background: rgb(29 26 22 / 55%);
+}
+
+.nudge-modal [role="dialog"] {
+  width: min(40rem, 100%);
+  max-height: calc(100vh - 2.5rem);
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+aside img,
+.nudge-modal img {
+  display: block;
+  width: 100%;
+  max-height: 12rem;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #e7eef6;
+}
+
+aside h2,
+.nudge-modal h2 {
+  font-size: 1.35rem;
+  margin: 0.85rem 0 0.25rem;
+}
+
+aside p,
+.nudge-modal p {
+  margin: 0.25rem 0 0.9rem;
+}
+
+aside a,
+.nudge-modal a {
+  display: inline-block;
+  background: #1d1a16;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+}
+
+button {
+  display: block;
+  margin-top: 0.85rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #5c564e;
+  cursor: pointer;
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+}
