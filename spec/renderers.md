@@ -10,7 +10,28 @@ A renderer must:
 
 It must also provide a per-framework helper. React: `useNudgeTracking(props.nudge_id)` returns `{ click, dismiss }`. Python server templates: `nudge_tracking(nudge_id)` returns the same pair. The mobile nudge tracking wrapper does too. Impression is not returned. The helper records it automatically once per `decide()` result. Re-renders and remounts do not count. That dedupe resets on each new `decide()` result.
 
-Every helper call goes to one developer backend endpoint and sends `{ nudge_id, action }`, where `action` is `impression`, `click`, or `dismiss`. The browser must not be trusted to set `user_id`. The developer's backend builds the flat `event` from its own session and calls the matching PLGKit function. A `dismiss_on_click` control calls `click`, then `dismiss`. A missing `user_id` fails closed: the event is ignored and never throws into the page.
+The renderer accepts the page's context once, for example `<NudgeHost context={{ organization_id: "acme" }} />` around the `decide()` result. Python `nudge_tracking` and the mobile nudge tracking wrapper take that same context once. The helper includes it on every call. Components do not pass organization ids.
+
+Every helper call goes to one developer backend endpoint:
+
+```json
+{ "nudge_id": "...", "action": "impression|click|dismiss", "context": { "organization_id": "acme" } }
+```
+
+`context` is an optional flat map of page-level keys the front end knows. New keys can be added later without changing this shape. `user_id` always comes from the backend session and is never accepted from the browser. Ignore it if it is present in `context`. The backend verifies each context key before using it, and drops any key it cannot verify (fail closed). It then builds the flat event `{ user_id, ...verified context }` and calls the matching PLGKit function. A `dismiss_on_click` control calls `click`, then `dismiss`. A missing `user_id` fails closed: the event is ignored and never throws into the page.
+
+```python
+def record(body, session):
+    context = body.get("context") or {}
+    verified = {}
+    org = context.get("organization_id")
+    if org is not None and session.user_belongs_to(org):
+        verified["organization_id"] = org  # otherwise drop it; drop any other unverified key too
+    event = {"user_id": session.user_id, **verified}  # user_id from the session only
+    {"impression": plgkit.impression, "click": plgkit.click, "dismiss": plgkit.dismiss}[body["action"]](
+        body["nudge_id"], event
+    )
+```
 
 React:
 
@@ -18,4 +39,4 @@ React:
 const { click, dismiss } = useNudgeTracking(props.nudge_id);
 ```
 
-The helper is optional. From your backend you may call `impression`, `dismiss`, and `click` yourself with an `event` built from the session. Then the once-per-`decide()`-result dedupe is your responsibility. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
+The helper is optional. From your backend you may call `impression`, `dismiss`, and `click` yourself with an `event` of `user_id` from the session plus verified context. Then the once-per-`decide()`-result dedupe is your responsibility. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
