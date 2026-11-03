@@ -12,11 +12,13 @@ Developers never write the ID in YAML. It always comes from the filename.
 
 `decide(location, ctx)` returns a list of winners. The list is empty when nothing matches. [`../decide-response.json`](../decide-response.json) is a `home` call that returns the banner. That file is a JSON array. The banner is the only example message at `home`, so the list has one item.
 
-Each item has `id` (the filename without `.yml`), `surface`, `component`, `dismissible`, and `render_props`.
+Each item has `id` (the filename without `.yml`), `surface`, `component`, and `render_props`.
 
-The host filters that list by `surface` and renders each slot. The wrapper looks up `component` in its registry, then passes `render_props` as that component's props, plus the reserved wrapper props. Those names are listed once under Component registry. A dumb component never wires this itself. `component` and `surface` are not merged into those props.
+The host filters that list by `surface` and renders each slot. The wrapper looks up `component` in its registry and passes `render_props` as the component's props. It does not merge anything into those props.
 
-`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The wrapper dedupes impressions: `impression(id)` fires at most once per message per page view, one `decide()` result, no matter how many times the component re-renders or remounts. A new page view, a new `decide()` call such as navigation or reload, can count again. The wrapper owns that dedupe. Dumb components stay unaware of it. The first time that result's component actually mounts or becomes visible, the wrapper calls `onImpression`, and that calls `impression(id)`, mirroring `onDismiss` calling `dismiss(id)`. The close control calls `onDismiss`. The component does not wire either call. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
+`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The developer calls `impression(id)` once when the message is shown, using the `id` on the `decide()` item. Re-renders and remounts do not count as a second impression. A new page view (a new `decide()` call, such as navigation or reload) can count again. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`. The developer calls `dismiss(id)` the same way. The backend accepts that for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: the renderer uses it to decide whether to show a close control.
+
+**Open question:** who enforces the once-per-page-view dedupe now that the developer calls `impression(id)` directly?
 
 ## Limits and selection
 
@@ -29,7 +31,6 @@ def decide(location, ctx):
         m for m in messages
         if m.location == location
         and m.surface and m.component and m.render_props is not None  # missing required fields fail closed; {} is valid
-        and not reserved_render_prop(m.render_props)  # reserved wrapper props; engine skips, CI flags
         and is_active(m, now_utc)  # missing from = now; missing to = forever; to is exclusive; date-only = midnight UTC
         and not dismissed(ctx.user, m.id)
         and under_max_impressions(ctx.user, m)  # read the count only; missing = unlimited
@@ -51,7 +52,6 @@ def decide(location, ctx):
             "id": m.id,
             "surface": m.surface,
             "component": m.component,
-            "dismissible": m.dismissible if m.dismissible is not None else True,
             "render_props": m.render_props,
         }
         for m in winners
@@ -70,9 +70,7 @@ Result: `[A, B]`.
 
 ## Component registry
 
-`component` is a universal name, never a framework path. Each wrapper keeps a registry from that name to the real component: a React component, a server template, or a mobile view. It passes `render_props` as the props, plus the reserved wrapper props.
-
-Reserved top-level `render_props` keys, the only list of them: `id`, `dismissible`, `onDismiss`, `onImpression`. A message that uses any of them is invalid. The engine skips it, fail closed, the same as a missing required field, and CI validation flags it. An empty `render_props: {}` is valid.
+`component` is a universal name, never a framework path. Each wrapper keeps a registry from that name to the real component: a React component, a server template, or a mobile view. It passes `render_props` through as the props and injects nothing.
 
 ```python
 registry = {
@@ -85,14 +83,10 @@ def render(item):
     if Component is None or item.get("render_props") is None:
         log.warning("nudges: missing or unregistered component for %s", item.get("id"))
         return None  # fail closed: render nothing
-    return Component(
-        **item["render_props"],  # no reserved keys; the engine already skipped those messages
-        id=item["id"],
-        dismissible=item["dismissible"],
-        onDismiss=lambda: dismiss(item["id"]),
-        onImpression=lambda: impression(item["id"]),  # wrapper dedupes per decide() result
-    )
+    return Component(**item["render_props"])
 ```
+
+The developer calls `impression(item["id"])` once when the message is shown, and `dismiss(item["id"])` when it is dismissed. Both use the `id` on the `decide()` item. `dismiss(id)` is accepted for every nudge.
 
 A missing or unregistered name renders nothing. The wrapper logs a warning. A CI check can flag names that are not in the registry.
 
@@ -121,10 +115,9 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. |
 | `active.to` | No | Live forever | Engine | UTC. A date with no time is midnight UTC. Exclusive at that exact instant. The modal omits it. |
 | `priority` | No | 100 | Engine | Lower numbers win. Ties go to the older filename (`id` ascending). |
-| `dismissible` | No | true | Engine and renderer | The engine records dismissals. Each `decide()` item includes it. The wrapper passes `onDismiss`, which calls `dismiss(id)`. |
-| `max_impressions` | No | Unlimited | Engine and renderer | The count is impressions the renderer reported with `impression(id)`. The wrapper counts at most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. `decide()` only reads that count; a message at the cap is not a candidate. |
+| `max_impressions` | No | Unlimited | Engine and renderer | The count is impressions the developer reported with `impression(id)`. At most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. Who enforces that dedupe is the open question under `decide()`. `decide()` only reads the count; a message at the cap is not a candidate. |
 | `audience` | No | Everyone matches | Engine | Omitted entirely means everyone matches. |
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
 | `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
-| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Top-level keys must not be a reserved wrapper prop. That list is under Component registry, and it is not repeated here. Using one is invalid: the engine skips the message, fail closed, and CI flags it. Other keys are opaque and passed through. The wrapper spreads them and adds the reserved props. |
+| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core and passed through as the component props. The wrapper adds no keys. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. |

@@ -3,12 +3,11 @@ surface: "modal" # Required. Missing = fail closed.
 active: # UTC. A date with no time is midnight UTC. Missing from = active immediately. Missing to = live forever. to is exclusive at that instant.
   from: "2026-10-30"
 priority: 1 # Optional, default 100. Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
-dismissible: true # Optional, default true. The engine records dismissals. Each decide() item includes it so the wrapper can pass onDismiss.
-max_impressions: 5 # Count of renderer-reported impressions. decide() only reads it.
+max_impressions: 5 # Count of impressions reported with impression(id). decide() only reads it.
 audience: # Optional. Omitted entirely means everyone matches. Omitted require_all or require_one_of passes; omitted exclude excludes no one. Functions live in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
   require_all: [has_active_supersuit_subscription]
 component: "OnboardingModal" # Required universal name, never a framework path. The wrapper registry maps it to the real component.
-render_props: # Required. {} is valid. Must not use a reserved wrapper prop (see the messages README). Other keys are opaque. Missing = fail closed.
+render_props: # Required. {} is valid. Opaque to the core and passed through as props. Missing = fail closed.
   slides:
     - title: "It's time to suit up"
       subtitle: "You need to believe, to achieve."

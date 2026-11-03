@@ -3,8 +3,8 @@
     "id": "20261030183743-home-supersuit-launch-banner",
     "surface": "main-top",
     "component": "Banner",
-    "dismissible": true,
     "render_props": {
+      "dismissible": true,
       "title": "Supersuit v0 available in beta.",
       "body": "The people's first supersuit brings you levitation, accelerated movements, and more. Take it to new heights.",
       "primary_cta": {
