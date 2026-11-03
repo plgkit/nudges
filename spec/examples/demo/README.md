@@ -1,12 +1,31 @@
 # Try the nudges
 
-One page. Three backends. Pick one backend, then start the page. They all listen on port 8787, so run only one at a time.
+One page. Three backends.
 
 You do not set a database address. Events go in `plgkit_events.sqlite` in this folder (`spec/examples/demo/plgkit_events.sqlite`). That file is not committed.
 
-## Start a backend
+## Run everything
 
-Run these from this folder.
+From this folder (once: `npm install`):
+
+```
+./server
+./server --backend go
+./server --backend node
+```
+
+That runs `plgkit migrate`, starts the API on port **8787** (Python by default), then Vite. Open the URL Vite prints. Ctrl+C stops both.
+
+From the repo root you can run the same:
+
+```
+./server
+./server --backend node
+```
+
+## Backend only
+
+If you want the page in a separate terminal:
 
 | Backend | Command |
 | --- | --- |
@@ -14,19 +33,9 @@ Run these from this folder.
 | Go | `go run ../../../packages/go/cmd/plgkit migrate && go run ./backends/go` |
 | TypeScript | `node --disable-warning=ExperimentalWarning --experimental-strip-types ../../../packages/node/src/cli.ts migrate && node --disable-warning=ExperimentalWarning --experimental-strip-types backends/node/server.ts` |
 
-`plgkit migrate` creates the events file. The second half starts the backend.
+Then: `npm run dev`.
 
-Install the page once before the TypeScript backend (`npm install` below). That backend reads the sample messages with the `yaml` package from this folder.
-
-## Start the page
-
-In a second terminal, from this folder:
-
-```
-npm install && npm run dev
-```
-
-Open the address Vite prints.
+The TypeScript backend reads sample messages with the `yaml` package from this folder (`npm install` once).
 
 ## What to click
 
