@@ -349,21 +349,28 @@ describe("NudgeSurface", () => {
       overlay?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(dismissCount()).toBe(1);
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.body.style.overflow).toBe("");
 
+    view.unmount();
+
+    mount(show(true));
+    await settle();
     await act(async () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     });
     expect(dismissCount()).toBe(2);
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
 
-    const close = overlay?.querySelector("button");
+    mount(show(true));
+    await settle();
+    const overlayAgain = document.body.querySelector<HTMLElement>('[role="dialog"]')?.parentElement;
+    const close = overlayAgain?.querySelector("button");
     if (!close) throw new Error("missing close button");
     await act(async () => {
       close.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
     expect(dismissCount()).toBe(3);
-
-    view.unmount();
-    expect(document.body.style.overflow).toBe("");
     expect(document.body.querySelector('[role="dialog"]')).toBeNull();
 
     mount(show(false));
@@ -587,7 +594,20 @@ describe("tracking", () => {
     expect(postedBodies().slice(-2).map((post) => post.body.action)).toEqual(["click", "dismiss"]);
     expect(postedBodies().slice(-1)[0]?.body.nudge_id).toBe(modalId);
 
-    const close = view.container.querySelector("aside button");
+    view.unmount();
+    const bannerOnly = mount(
+      <NudgeProvider
+        location="home"
+        endpoint="/api/nudges/events"
+        context={{ organization_id: "acme" }}
+        registry={{ Banner: SampleBanner }}
+        decide={async () => [bannerItem]}
+      >
+        <NudgeSurface surface="main-top" />
+      </NudgeProvider>,
+    );
+    await settle();
+    const close = bannerOnly.container.querySelector("aside button");
     if (!close) throw new Error("missing close button");
     fetchMock.mockRejectedValueOnce(new Error("offline"));
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -596,8 +616,6 @@ describe("tracking", () => {
     });
     await settle();
     expect(warn).toHaveBeenCalledWith("Nudge event could not be sent.", expect.any(Error));
-    expect(view.container.querySelector("aside")?.textContent).toContain(
-      "Supersuit v0 available in beta.",
-    );
+    expect(bannerOnly.container.querySelector("aside")).toBeNull();
   });
 });

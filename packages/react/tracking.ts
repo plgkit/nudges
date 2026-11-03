@@ -9,7 +9,8 @@ export type NudgeTracking = {
 /**
  * Records one impression for this decide() result the first time the nudge
  * is actually on screen. Later draws of the same result do not count.
- * `click` and `dismiss` send those actions. Neither throws into the page.
+ * `click` and `dismiss` send those actions. Dismiss also removes the nudge
+ * from the provider list right away. Neither throws into the page.
  */
 export function useNudgeTracking(nudgeId: string | undefined): NudgeTracking {
   const api = useContext(NudgeContext);
