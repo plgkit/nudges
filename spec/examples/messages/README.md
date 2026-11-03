@@ -16,14 +16,34 @@ Each item has `id` (the filename without `.yml`), `surface`, `component`, and `r
 
 The host filters that list by `surface` and renders each slot. A renderer resolves `component`, passes `nudge_id` from the item `id`, and spreads `render_props`. It does not write `nudge_id` into `render_props`. The contract is in [the renderer contract](../../renderers.md).
 
-`decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. `impression(nudge_id, event)`, `dismiss(nudge_id, event)`, and `click(nudge_id, event)` take a flat `event`, not the full `ctx`: `user_id` is required, plus any optional flat keys to record, for example `{"user_id": "u_123", "organization_id": "acme"}`. A missing `user_id` fails closed: the event is ignored and never throws into the page. `user_id` matches `ctx.user.id`. The renderer is given a developer-chosen `endpoint` once (for example `/api/nudges/events`; PLGKit never defines the route). `useNudgeTracking`, `nudge_tracking`, and the mobile nudge tracking wrapper POST `{ nudge_id, action, context }` to that URL. `action` is `impression`, `click`, or `dismiss`. `context` is an optional flat map of page-level keys. `user_id` comes only from the backend session, never from the browser. The backend drops any context key it cannot verify, then calls the matching PLGKit function with `{ user_id, ...verified context }`. The helper still enforces one impression per message per `decide()` result. Re-renders and remounts do not count. A new `decide()` call can count again. Calling `impression` yourself makes dedupe your responsibility. `dismiss` is accepted for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: whether to show a close control. `click` records that a control was clicked. A `dismiss_on_click` control calls `click`, then `dismiss`.
+`decide(location, ctx, messages)` is read-only. It only reads saved events to enforce `max_impressions` and `dismiss_scope`. It does not record them. You pass `messages` in (the list you loaded). `user_id` is `ctx.user.id`. `impression(nudge_id, event)`, `dismiss(nudge_id, event)`, and `click(nudge_id, event)` take a flat `event`, not the full `ctx`: `user_id` is required, plus any optional flat keys to record, for example `{"user_id": "u_123", "organization_id": "acme"}`. A missing `user_id` is ignored and never throws into the page. Saving those calls, and checking `context` on your endpoint, is described in [Saved events](#saved-events). The helper still enforces one impression per message per `decide()` result. Re-renders and remounts do not count. A new `decide()` call can count again. Calling `impression` yourself makes dedupe your responsibility. `dismiss` is accepted for every nudge, with no per-message opt-in. A `dismissible` key inside `render_props` is presentation only: whether to show a close control. `click` records that a control was clicked. A `dismiss_on_click` control calls `click`, then `dismiss`.
+
+## Saved events
+
+Each impression, click, and dismiss is a new row in the table `plgkit_events`. Rows are only added. They are not edited or removed. The columns are `id`, `nudge_id`, `action` (`impression`, `click`, or `dismiss`), `user_id`, `context` (the flat keys that passed the check), and `created_at` (UTC). An index on `(user_id, nudge_id, action)` makes the reads cheap.
+
+`decide()` counts impression rows for this user and this nudge and compares that count to `max_impressions`. For a dismissal, it loads this user's dismiss rows for that nudge and compares them in code. No `dismiss_scope` means any of those rows hides the message. With `dismiss_scope`, every listed key must be present on `ctx` and on the row, with the same values. A row missing a listed key does not count. If `ctx` is missing a listed key, nothing matches, so the message can show.
+
+`config.yml` has `database_url_env: PLGKIT_DATABASE_URL`. That value is the name of an environment variable, not the database address. The address can contain a password, so it does not go in the file you commit. It can be a SQLite address or a Postgres address (`postgres://` or `postgresql://`). If the variable is unset, plgkit uses a SQLite file named `plgkit_events.sqlite` in the folder the program was started from.
+
+`plgkit migrate` creates the table. The SQL files are numbered (`0001_...sql`) and written once. Each language package ships a copy. Run the command again when you update plgkit. It only applies new files. You run it yourself.
+
+The browser POSTs `{ nudge_id, action, context }` to your own URL. `context` is an optional flat map. The browser never sends a user id we trust. One handler per language checks the body and writes the row:
+
+- Python: `handle_event(body, user_id, verify)`
+- TypeScript: `handleEvent(body, userId, verify)`
+- Go: `HandleEvent(body, userID, verify)`, plus `Handler(verify, userID)` which is a normal `http.Handler`
+
+`user_id` comes from the session. A `user_id` inside `context` is ignored. `verify` maps a context key to `(user_id, value) -> true or false`. A key with no function, or a function that is not true, is dropped. A bad body returns 400. A good body returns 204. If the session has no user id, the handler returns 204 and writes nothing. If the database write fails, the handler returns 500.
+
+You can skip the handler and call `impression`, `click`, or `dismiss` yourself. Short wiring examples are in [the examples setup](../README.md#setup).
 
 ## Limits and selection
 
-Limits live in `plgkit/nudges/config.yml` under `locations`, not in message files, so messages cannot disagree about a page's cap. Surface maxes apply only within their location. `decide(location, ctx)` uses that location's `max` and that location's surface `max` values. A location not listed has max 1. A surface not listed under its location has max 1. `plgkit validate` (follow-up PR) flags a surface max greater than its location max as unreachable.
+Limits live in `plgkit/nudges/config.yml` under `locations`, not in message files, so messages cannot disagree about a page's cap. Surface maxes apply only within their location. `decide(location, ctx, messages)` uses that location's `max` and that location's surface `max` values. A location not listed has max 1. A surface not listed under its location has max 1. `plgkit validate` (follow-up PR) flags a surface max greater than its location max as unreachable.
 
 ```python
-def decide(location, ctx):
+def decide(location, ctx, messages):
     loc = locations.get(location) or {}
     location_limit = loc.get("max", 1)
     surfaces = loc.get("surfaces") or {}
@@ -97,8 +117,8 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. Inclusive at that exact instant. |
 | `active.to` | No | Live forever | Engine | UTC. A date with no time is midnight UTC. Exclusive at that exact instant. The modal omits it. |
 | `priority` | No | 100 | Engine | Lower numbers win. Ties go to the older filename (`id` ascending). |
-| `max_impressions` | No | Unlimited | Engine and renderer | The count is `impression(nudge_id, event)` calls for this `user_id`. At most one per message per `decide()` result. Re-renders and remounts do not count again. A new `decide()` call can. The renderer helper enforces that dedupe. A direct call makes dedupe the caller's job. `decide()` only reads the count; a message at the cap is not a candidate. |
-| `dismiss_scope` | No | Everywhere for that user | Engine | Flat list of event/ctx keys, for example `[organization_id]`. Omitted means a dismissal for that `user_id` applies everywhere. When set, `decide()` treats the message as dismissed only if a dismissal for that user has the same values for those keys. A dismiss event missing a scoped key is ignored (fail closed). If ctx is missing a key listed in dismiss_scope, no dismissal matches, so the message can show. This is intentional (e.g. a page outside any organization). The modal sets `[organization_id]`. |
+| `max_impressions` | No | Unlimited | Engine and renderer | The count is impression rows in `plgkit_events` for this `user_id` and nudge. At most one per message per `decide()` result. Re-renders and remounts do not count again. A new `decide()` call can. The renderer helper enforces that dedupe. A direct call makes dedupe the caller's job. `decide()` only reads the count; a message at the cap is not a candidate. |
+| `dismiss_scope` | No | Everywhere for that user | Engine | Flat list of event/ctx keys, for example `[organization_id]`. Omitted means a dismissal for that `user_id` applies everywhere. `decide()` loads that user's dismiss rows for the nudge and compares the keys in code. When set, the message is dismissed only if a row has the same values for those keys. A dismiss row missing a listed key does not match. If ctx is missing a key listed in dismiss_scope, no dismissal matches, so the message can show. This is intentional (e.g. a page outside any organization). The modal sets `[organization_id]`. |
 | `audience` | No | Everyone matches | Engine | Omitted entirely means everyone matches. An audience name not present in the audience map fails closed, so the message is skipped at runtime. `plgkit validate` (follow-up PR) must report an unknown audience name as an error. |
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |

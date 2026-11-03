@@ -1,4 +1,12 @@
 # In your app, this file lives at plgkit/nudges/config.yml. It is Nudges-only.
+# The name of the environment variable that holds the database address.
+# Do not put the address here. It can contain a password, and this file is committed.
+# If that variable is unset, plgkit uses a local SQLite file named plgkit_events.sqlite
+# in the folder the program was started from.
+# The address can be a SQLite URL (sqlite:///plgkit_events.sqlite) or a Postgres URL
+# (postgres:// or postgresql://).
+database_url_env: PLGKIT_DATABASE_URL
+
 # decide() joins relative `asset` values in render_props with assets_base_url before returning.
 assets_base_url: "/static/nudges/"
 
