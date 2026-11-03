@@ -136,6 +136,14 @@ class DecideTests(unittest.TestCase):
         plgkit.dismiss("banner", {"user_id": "u_123"}, db=self.db)
         self.assertEqual(self.decide([banner]), [])
 
+    def test_undismiss_resets_impressions(self):
+        banner = message(max_impressions=2)
+        plgkit.impression("banner", {"user_id": "u_123"}, db=self.db)
+        plgkit.impression("banner", {"user_id": "u_123"}, db=self.db)
+        self.assertEqual(self.decide([banner]), [])
+        plgkit.undismiss("banner", {"user_id": "u_123"}, db=self.db)
+        self.assertEqual([item["id"] for item in self.decide([banner])], ["banner"])
+
     def test_active_window_and_unknown_audience(self):
         window = message(
             max_impressions=None,

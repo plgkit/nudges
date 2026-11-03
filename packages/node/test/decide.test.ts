@@ -99,6 +99,16 @@ test("dismiss scope", () => {
   );
 });
 
+test("undismiss resets impressions", () => {
+  const db = openDb();
+  const banner = message({ max_impressions: 2 });
+  impression("banner", { user_id: "u_123" }, db);
+  impression("banner", { user_id: "u_123" }, db);
+  assert.deepEqual(decide("home", ctx(), [banner], { db, config }), []);
+  undismiss("banner", { user_id: "u_123" }, db);
+  assert.deepEqual(decide("home", ctx(), [banner], { db, config }).map((item) => item.id), ["banner"]);
+});
+
 test("undismiss cycle", () => {
   const db = openDb();
   const banner = message({ max_impressions: null });
