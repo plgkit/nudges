@@ -32,7 +32,7 @@ class HandlerTests(unittest.TestCase):
     def test_migrate_can_run_twice(self):
         plgkit.migrate(self.db)
         count = self.db.execute("SELECT COUNT(*) FROM plgkit_schema_migrations").fetchone()[0]
-        self.assertEqual(count, 2)
+        self.assertEqual(count, 1)
         names = {
             row[0]
             for row in self.db.execute(
@@ -251,7 +251,7 @@ class HandlerTests(unittest.TestCase):
                 "SELECT action FROM plgkit_events WHERE user_id = ? AND nudge_id = ? ORDER BY created_at, id",
                 ("u_123", "banner"),
             ).fetchall()
-            self.assertEqual([row[0] for row in rows], ["dismiss", "undismiss"])
+            self.assertEqual([row[0] for row in rows], [])
 
 
 if __name__ == "__main__":

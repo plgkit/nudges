@@ -20,7 +20,7 @@ func TestMigrateCanRunTwice(t *testing.T) {
 	if err := db.QueryRow(`SELECT COUNT(*) FROM plgkit_schema_migrations`).Scan(&count); err != nil {
 		t.Fatal(err)
 	}
-	if count != 2 {
+	if count != 1 {
 		t.Fatalf("versions = %d", count)
 	}
 	names := map[string]bool{}

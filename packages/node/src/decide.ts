@@ -1,5 +1,5 @@
 /** Choose which messages to show. This only reads the events table. */
-import { countImpressions, dismissToggleEvents, getDefaultDb, type SqlDB, type ToggleEvent } from "./store.ts";
+import { countImpressions, dismissContexts, getDefaultDb, type SqlDB } from "./store.ts";
 
 export type Message = Record<string, any>;
 
@@ -94,41 +94,23 @@ export function joinAsset(asset: string, base: string): string {
 }
 
 function isDismissed(db: SqlDB, userId: string, message: Message, ctx: unknown): boolean {
-  // The latest matching dismiss must be newer than the latest undismiss.
+  // No dismiss_scope: any dismiss row for this user and nudge matches.
+  // With dismiss_scope: every listed key must be on ctx and on the row, with
+  // equal values. A row missing a scoped key does not match. If ctx is missing
+  // a scoped key, no row matches, so the message can show.
   if (!userId) return false;
-  const events = dismissToggleEvents(db, userId, message.id as string);
-  let latestUndismiss: ToggleEvent | null = null;
-  for (const event of events) {
-    if (event.action === "undismiss") latestUndismiss = event;
-  }
-  const scope =
-    "dismiss_scope" in message && message.dismiss_scope != null ? (message.dismiss_scope as string[]) : null;
+  const rows = dismissContexts(db, userId, message.id as string);
+  if (!("dismiss_scope" in message) || message.dismiss_scope == null) return rows.length > 0;
+  const scope = message.dismiss_scope as string[];
   const ctxValues: Record<string, unknown> = {};
-  if (scope) {
-    for (const key of scope) {
-      const found = lookup(ctx, key);
-      if (!found.ok) return false;
-      ctxValues[key] = found.value;
-    }
+  for (const key of scope) {
+    const found = lookup(ctx, key);
+    if (!found.ok) return false;
+    ctxValues[key] = found.value;
   }
-  let latestDismiss: ToggleEvent | null = null;
-  for (const event of events) {
-    if (event.action !== "dismiss") continue;
-    if (
-      scope == null ||
-      scope.every((key) => Object.prototype.hasOwnProperty.call(event.context, key) && event.context[key] === ctxValues[key])
-    ) {
-      latestDismiss = event;
-    }
-  }
-  if (!latestDismiss) return false;
-  if (!latestUndismiss) return true;
-  return eventIsAfter(latestDismiss, latestUndismiss);
-}
-
-function eventIsAfter(left: ToggleEvent, right: ToggleEvent): boolean {
-  if (left.created_at !== right.created_at) return left.created_at > right.created_at;
-  return left.id > right.id;
+  return rows.some((row) =>
+    scope.every((key) => Object.prototype.hasOwnProperty.call(row, key) && row[key] === ctxValues[key]),
+  );
 }
 
 function underMaxImpressions(db: SqlDB, userId: string, message: Message): boolean {

@@ -187,8 +187,15 @@ export function dismiss(nudgeId: string, event: Record<string, unknown> | null, 
   record("dismiss", nudgeId, event, db);
 }
 
+/** Dev-only: delete dismiss rows for this user and nudge. */
 export function undismiss(nudgeId: string, event: Record<string, unknown> | null, db?: SqlDB | null): void {
-  record("undismiss", nudgeId, event, db);
+  if (typeof nudgeId !== "string" || nudgeId === "" || !event || typeof event !== "object") return;
+  const userId = event.user_id;
+  if (typeof userId !== "string" || userId === "") return;
+  const database = db ?? getDefaultDb();
+  database
+    .prepare("DELETE FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'")
+    .run(userId, nudgeId);
 }
 
 export function countImpressions(db: SqlDB, userId: string, nudgeId: string): number {
@@ -200,29 +207,20 @@ export function countImpressions(db: SqlDB, userId: string, nudgeId: string): nu
   return Number(row.n);
 }
 
-export type ToggleEvent = {
-  id: string;
-  action: string;
-  context: Record<string, unknown>;
-  created_at: string;
-};
-
-export function dismissToggleEvents(db: SqlDB, userId: string, nudgeId: string): ToggleEvent[] {
+export function dismissContexts(db: SqlDB, userId: string, nudgeId: string): Record<string, unknown>[] {
   const rows = db
     .prepare(
-      "SELECT id, action, context, created_at FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action IN ('dismiss', 'undismiss') ORDER BY created_at, id",
+      "SELECT context FROM plgkit_events WHERE user_id = ? AND nudge_id = ? AND action = 'dismiss'",
     )
-    .all(userId, nudgeId) as { id: string; action: string; context: string; created_at: string }[];
-  const found: ToggleEvent[] = [];
+    .all(userId, nudgeId) as { context: string }[];
+  const found: Record<string, unknown>[] = [];
   for (const row of rows) {
-    let context: Record<string, unknown> = {};
     try {
       const data = JSON.parse(row.context);
-      if (data && typeof data === "object" && !Array.isArray(data)) context = data;
+      if (data && typeof data === "object" && !Array.isArray(data)) found.push(data);
     } catch {
-      context = {};
+      continue;
     }
-    found.push({ id: row.id, action: row.action, context, created_at: row.created_at });
   }
   return found;
 }

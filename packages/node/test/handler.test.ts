@@ -39,7 +39,7 @@ test("migrate can run twice", () => {
   const db = openDb();
   migrate(db);
   const count = db.prepare("SELECT COUNT(*) AS n FROM plgkit_schema_migrations").get() as { n: number };
-  assert.equal(Number(count.n), 2);
+  assert.equal(Number(count.n), 1);
   const names = new Set(
     (db.prepare("SELECT name FROM sqlite_master WHERE type IN ('table', 'index')").all() as { name: string }[]).map(
       (row) => row.name,

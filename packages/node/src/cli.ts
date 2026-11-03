@@ -1,4 +1,4 @@
-/** `plgkit migrate` creates the events table. `plgkit undismiss` is CLI-only. */
+/** `plgkit migrate` creates the events table. `plgkit undismiss` is a dev-only CLI. */
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { migrate, PlgkitError, undismiss } from "./store.ts";

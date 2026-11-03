@@ -1,4 +1,4 @@
-"""`plgkit migrate` creates the events table. `plgkit undismiss` is CLI-only."""
+"""`plgkit migrate` creates the events table. `plgkit undismiss` is a dev-only CLI."""
 
 import sys
 
