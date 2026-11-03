@@ -5,11 +5,16 @@ A renderer is its own package. It is not built into PLGKit, and anyone can publi
 ## Usage
 
 ```jsx
+function decide(location, context) {
+  return yourBackend.decide(location, context);
+}
+
 <NudgeProvider
   location="home"
   endpoint="/api/nudges/events"
   context={{ organization_id: "acme" }}
   registry={{ Banner }}
+  decide={decide}
 >
   <header>
     <div>
@@ -23,16 +28,17 @@ function Banner(props) {
 }
 ```
 
-The provider calls `decide(location)` once, so the page limits cover every slot. Each item is `{ id, surface, component, render_props }`. A slot shows only items with that `surface`. The component is `<Banner {...item.render_props} nudge_id={item.id} />`.
+The provider calls `decide(location, context)` once, so the page limits cover every slot. Each item is `{ id, surface, component, render_props }`. A slot shows only items with that `surface`. The component is `<Banner {...item.render_props} nudge_id={item.id} />`.
 
 ## Provider props
 
 | Prop | Meaning |
 | --- | --- |
-| `location` | Sent once to `decide(location, ctx)`. Slots do not take a location. |
+| `location` | Sent once to `decide(location, context)`. Slots do not take a location. |
 | `context` | Extra page facts, taken once and sent on every helper call. A component does not pass the org id itself. New fact names do not change the POST shape. |
 | `endpoint` | Your own URL. PLGKit does not pick the path. |
 | `registry` | The `component` name mapped to a real component, page template, or phone view. |
+| `decide` | A function you write. We call `decide(location, context)` once for the page. It asks your backend and returns the list to show. We do not pick the messages. We call it again only when the location or the context values change. A new object with the same values does not call it again. `user_id` is left out. |
 
 ## Surface props
 

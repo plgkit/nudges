@@ -31,6 +31,12 @@ Use `audiences.go` or `audiences.ts` instead of `audiences.py` if your app is Go
 3. The renderer shows that component.
 4. Clicks and dismisses are sent with POST to your endpoint.
 
+The React renderer is [`packages/react`](../../packages/react/README.md). It does not live in this folder. You pass a `decide` function that calls your backend and returns the list. The provider calls that function once for the page. Each slot then draws its own messages. `Banner` and `OnboardingModal` from that package match the two sample messages. To see that in the browser, run the [demo](demo/README.md).
+
+```jsx
+const decide = (location, context) => yourBackend.decide(location, context);
+```
+
 ## Setup
 
 1. In `config.yml`, `database_url_env` is the name of an environment variable. It is not the database address. The address can contain a password, so it stays out of the file you commit.
@@ -100,7 +106,7 @@ You can skip the handler and call `impression`, `click`, and `dismiss` yourself.
 The home banner is location `home`, surface `main-top`, component `Banner`. The slot sits a few layers down. The provider calls `decide("home")` once for every slot on this page.
 
 ```jsx
-<NudgeProvider location="home" endpoint="/api/nudges/events" context={{ organization_id: "acme" }} registry={{ Banner }}>
+<NudgeProvider location="home" endpoint="/api/nudges/events" context={{ organization_id: "acme" }} registry={{ Banner }} decide={decide}>
   <header>
     <div>
       <NudgeSurface surface="main-top" />
@@ -112,7 +118,7 @@ The home banner is location `home`, surface `main-top`, component `Banner`. The 
 The onboarding modal is location `get-started`, surface `modal`, component `OnboardingModal`.
 
 ```jsx
-<NudgeProvider location="get-started" endpoint="/api/nudges/events" context={{ organization_id: "acme" }} registry={{ OnboardingModal }}>
+<NudgeProvider location="get-started" endpoint="/api/nudges/events" context={{ organization_id: "acme" }} registry={{ OnboardingModal }} decide={decide}>
   <main>
     <NudgeSurface surface="modal" />
   </main>
