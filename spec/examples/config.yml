@@ -1,5 +1,5 @@
 # In your app, this file lives at plgkit/nudges/config.yml. It is Nudges-only.
-# `asset` paths in render_props are resolved against assets_base_url, since that depends on your server.
+# decide() joins relative `asset` values in render_props with assets_base_url before returning.
 assets_base_url: "/static/nudges/"
 
 # Max winners decide() may return for a location. A location not listed defaults to 1.

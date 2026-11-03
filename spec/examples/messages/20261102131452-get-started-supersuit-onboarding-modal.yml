@@ -12,7 +12,7 @@ render_props: # Required. {} is valid. Opaque to the core and passed through as 
   slides:
     - title: "It's time to suit up"
       subtitle: "You need to believe, to achieve."
-      asset: "20261102131452-get-started-supersuit-onboarding-modal/slide_1.png" # In your static directory; resolved against assets_base_url in plgkit/nudges/config.yml
+      asset: "20261102131452-get-started-supersuit-onboarding-modal/slide_1.png" # Relative. decide() joins it with assets_base_url.
       primary_cta:
         text: "Activate your suit"
         url: "https://supersuit.tech/examples/activate-your-suit"

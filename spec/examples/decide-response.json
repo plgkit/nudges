@@ -5,6 +5,7 @@
     "component": "Banner",
     "render_props": {
       "dismissible": true,
+      "asset": "/static/nudges/20261030183743-home-supersuit-launch-banner/banner.png",
       "title": "Supersuit v0 available in beta.",
       "body": "The people's first supersuit brings you levitation, accelerated movements, and more. Take it to new heights.",
       "primary_cta": {

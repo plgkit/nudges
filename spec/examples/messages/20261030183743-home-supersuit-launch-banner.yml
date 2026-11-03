@@ -12,6 +12,7 @@ audience: # Optional. Omitted entirely means everyone matches. Omitted require_a
 component: "Banner" # Required universal name, never a framework path. The renderer registry maps it to the real component.
 render_props: # Required. {} is valid. Opaque to the core and passed through as props. Missing = fail closed.
   dismissible: true # Presentation only: show a close control. Does not gate dismiss(id).
+  asset: "20261030183743-home-supersuit-launch-banner/banner.png" # Relative. decide() joins it with assets_base_url.
   title: "Supersuit v0 available in beta."
   body: "The people's first supersuit brings you levitation, accelerated movements, and more. Take it to new heights."
   primary_cta:

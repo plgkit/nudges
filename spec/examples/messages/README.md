@@ -50,7 +50,7 @@ def decide(location, ctx):
             "id": m.id,
             "surface": m.surface,
             "component": m.component,
-            "render_props": m.render_props,
+            "render_props": resolve_assets(m.render_props, assets_base_url),
         }
         for m in winners
     ]
@@ -100,4 +100,4 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
 | `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
-| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core. Passed through as the component props, next to a separate `nudge_id`. Not written into `render_props`. If this object also has `nudge_id`, the renderer's value wins. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. `dismiss_on_click` means that control calls `dismiss` for this nudge when clicked. |
+| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core except `asset`: `decide()` joins a relative `asset` with `assets_base_url`, and leaves values that are `http://`, `https://`, or start with `/` as is. Passed through as the component props, next to a separate `nudge_id`. `nudge_id` is not written into `render_props`. If this object also has `nudge_id`, the renderer's value wins. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. `dismiss_on_click` means that control calls `dismiss` for this nudge when clicked. |
