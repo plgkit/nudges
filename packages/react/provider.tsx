@@ -12,8 +12,9 @@ export type NudgeProviderProps = {
   /** Component name to React component. */
   registry: NudgeRegistry;
   /**
-   * Calls your backend. We pass the location. You return the list the
-   * backend already chose. We do not pick messages here.
+   * Calls your backend as `decide(location, context)`. `context` is the flat
+   * page facts, with `user_id` left out. Return the list the backend already
+   * chose. We do not pick messages here.
    */
   decide: DecideFn;
   children?: ReactNode;
@@ -46,7 +47,9 @@ export function NudgeProvider({
   contextRef.current = context;
 
   const registryOrEmpty = registry ?? emptyRegistry;
-  const contextKey = JSON.stringify(factsFrom(context) ?? {});
+  const facts = factsFrom(context) ?? EMPTY_FACTS;
+  const [stableFacts, setStableFacts] = useState(facts);
+  if (!shallowEqual(stableFacts, facts)) setStableFacts(facts);
 
   useEffect(() => {
     const request = ++requestRef.current;
@@ -60,7 +63,8 @@ export function NudgeProvider({
           console.warn("NudgeProvider needs a decide function. Showing nothing.");
           return;
         }
-        const result = await ask(location);
+        const pageFacts = factsFrom(contextRef.current);
+        const result = await ask(location, pageFacts);
         if (cancelled || request !== requestRef.current) return;
         if (!Array.isArray(result)) {
           console.warn("NudgeProvider decide() did not return a list. Showing nothing.");
@@ -87,7 +91,7 @@ export function NudgeProvider({
     return () => {
       cancelled = true;
     };
-  }, [location, contextKey]);
+  }, [location, stableFacts]);
 
   const api = useMemo<NudgeApi>(() => {
     return {
@@ -116,6 +120,20 @@ export function NudgeProvider({
   }, [items, registryOrEmpty, resultId]);
 
   return <NudgeContext.Provider value={api}>{children}</NudgeContext.Provider>;
+}
+
+const EMPTY_FACTS: Record<string, unknown> = {};
+
+function shallowEqual(left: Record<string, unknown>, right: Record<string, unknown>): boolean {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) return false;
+  for (const key of leftKeys) {
+    if (!Object.prototype.hasOwnProperty.call(right, key) || !Object.is(left[key], right[key])) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function isNudgeRow(value: unknown): value is NudgeItem {

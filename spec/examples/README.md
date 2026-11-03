@@ -34,7 +34,7 @@ Use `audiences.go` or `audiences.ts` instead of `audiences.py` if your app is Go
 The React renderer is [`packages/react`](../../packages/react/README.md). It does not live in this folder. You pass a `decide` function that calls your backend and returns the list. The provider calls that function once for the page. Each slot then draws its own messages. `Banner` and `OnboardingModal` from that package match the two sample messages.
 
 ```jsx
-const decide = (location) => yourBackend.decide(location);
+const decide = (location, context) => yourBackend.decide(location, context);
 ```
 
 ## Using it in a page

@@ -9,11 +9,15 @@ export type NudgeItem = {
 };
 
 /**
- * Asks your backend what to show. The provider calls this with the page
- * location. Return the list your backend already chose. This package does
- * not pick messages.
+ * Asks your backend what to show. The provider calls
+ * `decide(location, context)` with the page location and the flat page
+ * facts (`user_id` left out). Return the list your backend already chose.
+ * This package does not pick messages.
  */
-export type DecideFn = (location: string) => Promise<NudgeItem[]>;
+export type DecideFn = (
+  location: string,
+  context: Record<string, unknown> | undefined,
+) => Promise<NudgeItem[]>;
 
 /**
  * Component name to React component. `any` is deliberate: each component

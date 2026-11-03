@@ -138,7 +138,7 @@ describe("NudgeSurface", () => {
       <NudgeProvider
         location="home"
         endpoint="/api/nudges/events"
-        context={{ organization_id: "acme" }}
+        context={{ organization_id: "acme", user_id: "u_123" }}
         registry={{ Banner: SampleBanner, OnboardingModal }}
         decide={decide}
       >
@@ -156,7 +156,53 @@ describe("NudgeSurface", () => {
     await settle();
 
     expect(decide).toHaveBeenCalledTimes(1);
-    expect(decide).toHaveBeenCalledWith("home");
+    expect(decide).toHaveBeenCalledWith("home", { organization_id: "acme" });
+    expect(JSON.stringify(decide.mock.calls[0])).not.toContain("u_123");
+
+    view.rerender(
+      <NudgeProvider
+        location="home"
+        endpoint="/api/nudges/events"
+        context={{ user_id: "u_123", organization_id: "acme" }}
+        registry={{ Banner: SampleBanner, OnboardingModal }}
+        decide={decide}
+      >
+        <header>
+          <div>
+            <NudgeSurface surface="main-top" />
+          </div>
+        </header>
+        <NudgeSurface surface="sidebar" />
+        <main>
+          <NudgeSurface surface="modal" />
+        </main>
+      </NudgeProvider>,
+    );
+    await settle();
+    expect(decide).toHaveBeenCalledTimes(1);
+
+    view.rerender(
+      <NudgeProvider
+        location="home"
+        endpoint="/api/nudges/events"
+        context={{ organization_id: "other" }}
+        registry={{ Banner: SampleBanner, OnboardingModal }}
+        decide={decide}
+      >
+        <header>
+          <div>
+            <NudgeSurface surface="main-top" />
+          </div>
+        </header>
+        <NudgeSurface surface="sidebar" />
+        <main>
+          <NudgeSurface surface="modal" />
+        </main>
+      </NudgeProvider>,
+    );
+    await settle();
+    expect(decide).toHaveBeenCalledTimes(2);
+    expect(decide).toHaveBeenLastCalledWith("home", { organization_id: "other" });
 
     const banner = view.container.querySelector(`aside`);
     const modal = view.container.querySelector(`[role="dialog"]`);
@@ -188,17 +234,20 @@ describe("NudgeSurface", () => {
       );
     }
 
+    const decide = vi.fn(async () => [{ ...bannerItem, component: "Probe" }]);
     const view = mount(
       <NudgeProvider
         location="home"
         endpoint="/api/nudges/events"
         registry={{ Probe: memo(Probe) }}
-        decide={async () => [{ ...bannerItem, component: "Probe" }]}
+        decide={decide}
       >
         <NudgeSurface surface="main-top" />
       </NudgeProvider>,
     );
     await settle();
+    expect(decide).toHaveBeenCalledTimes(1);
+    expect(decide).toHaveBeenCalledWith("home", undefined);
 
     const node = view.container.querySelector("p");
     expect(node?.getAttribute("data-received")).toBe(bannerId);

@@ -6,10 +6,10 @@ This package draws nudges in a React page. Your backend decides which ones. This
 
 `NudgeProvider` asks your backend once for the page. `NudgeSurface` is one slot. Put the slot anywhere inside the provider, even several layers down.
 
-`decide` is a function you write. We call it with the location only. It calls your backend and returns the list. Read the latest page facts inside that function. This package does not pick the messages.
+`decide` is a function you write. We call `decide(location, context)`. It asks your backend and returns the list. This package does not pick the messages.
 
 ```jsx
-const decide = (location) => yourBackend.decide(location);
+const decide = (location, context) => yourBackend.decide(location, context);
 
 <NudgeProvider
   location="home"
