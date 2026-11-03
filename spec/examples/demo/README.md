@@ -6,22 +6,17 @@ You do not set a database address. Events go in `plgkit_events.sqlite` in this f
 
 ## Run everything
 
-From this folder (once: `npm install`). The `server` scripts are executable in git; if your checkout says permission denied, run `chmod +x server`.
+From the **repo root** (once: `npm install --prefix spec/examples/demo`):
 
 ```
-./server
-./server --backend go
-./server --backend node
+script/server
+script/server --backend go
+script/server --backend node
 ```
 
 That runs `plgkit migrate`, starts the API on port **8787** (Python by default), then Vite. Open the URL Vite prints. Ctrl+C stops both.
 
-From the repo root you can run the same:
-
-```
-./server
-./server --backend node
-```
+The `script/server` file is executable in git. If your checkout says permission denied, run `chmod +x script/server`.
 
 ## Backend only
 
@@ -33,7 +28,7 @@ If you want the page in a separate terminal:
 | Go | `go run ../../../packages/go/cmd/plgkit migrate && go run ./backends/go` |
 | TypeScript | `node --disable-warning=ExperimentalWarning --experimental-strip-types ../../../packages/node/src/cli.ts migrate && node --disable-warning=ExperimentalWarning --experimental-strip-types backends/node/server.ts` |
 
-Then: `npm run dev`.
+Then from this folder: `npm run dev`.
 
 The TypeScript backend reads sample messages with the `yaml` package from this folder (`npm install` once).
 

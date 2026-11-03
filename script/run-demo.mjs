@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 /**
  * Migrate, start one demo backend, then Vite.
- * Run: ./server [--backend python|go|node]
+ * Entry: script/server
  */
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const demoDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(demoDir, "../../..");
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(scriptDir, "..");
+const demoDir = path.join(repoRoot, "spec/examples/demo");
 
 const NODE_FLAGS = ["--disable-warning=ExperimentalWarning", "--experimental-strip-types"];
 
@@ -49,7 +50,7 @@ export function run(argv) {
 }
 
 function usage() {
-  console.error("Usage: ./server [--backend python|go|node]");
+  console.error("Usage: script/server [--backend python|go|node]");
   console.error("  Default backend: python");
 }
 
@@ -86,7 +87,7 @@ function parseBackend(argv) {
 
 function ensureDeps() {
   if (fs.existsSync(path.join(demoDir, "node_modules", "vite"))) return;
-  console.error("Run once from this folder: npm install");
+  console.error("Run once: npm install --prefix spec/examples/demo");
   process.exit(1);
 }
 
