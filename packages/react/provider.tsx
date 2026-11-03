@@ -107,6 +107,9 @@ export function NudgeProvider({
       send(nudgeId, action) {
         if (!nudgeId) return;
         postEvent(endpointRef.current, contextRef.current, nudgeId, action);
+        if (action === "dismiss") {
+          setItems((current) => current.filter((item) => item.id !== nudgeId));
+        }
       },
       setAnchor(nudgeId, node) {
         if (!nudgeId) return;
