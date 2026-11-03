@@ -8,7 +8,7 @@ never leaves your app.
 """
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 
@@ -33,7 +33,7 @@ class Context:
 
 
 def _age_in_years(birth_date: date, today: Optional[date] = None) -> int:
-    today = today or date.today()
+    today = today or datetime.now(timezone.utc).date()
     before_birthday = (today.month, today.day) < (birth_date.month, birth_date.day)
     return today.year - birth_date.year - int(before_birthday)
 

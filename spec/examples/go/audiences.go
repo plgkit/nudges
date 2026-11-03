@@ -39,6 +39,8 @@ func ageInYears(birthDate time.Time, today time.Time) int {
 	if today.IsZero() {
 		today = time.Now()
 	}
+	birthDate = birthDate.UTC()
+	today = today.UTC()
 	by, bm, bd := birthDate.Date()
 	ty, tm, td := today.Date()
 	age := ty - by

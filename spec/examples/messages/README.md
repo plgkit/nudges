@@ -29,7 +29,7 @@ def decide(location, ctx):
         m for m in messages
         if m.location == location
         and m.surface and m.component and m.render_props is not None  # missing required fields fail closed; {} is valid
-        and is_active(m, now_utc)  # missing from = now; missing to = forever; to is exclusive; date-only = midnight UTC
+        and is_active(m, now_utc)  # UTC midnight if date-only; from inclusive; to exclusive; missing from = now; missing to = forever
         and not dismissed(ctx.user, m.id)
         and under_max_impressions(ctx.user, m)  # read the count only; missing = unlimited
         and audience_matches(m, ctx)  # omitted audience = everyone
@@ -92,7 +92,7 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `location` | Yes | — | Engine | Missing = fail closed: the message is never returned or rendered. Argument to `decide(location, ctx)`. Not on each result item. Cap is `location_limits` in config; unlisted locations default to 1. Examples: `home`, `get-started`. |
 | `surface` | Yes | — | Engine | Missing = fail closed. On each result item. The host filters by it to render each slot. Not merged into component props. Cap is `surface_limits` in config; unlisted surfaces default to 1. Examples: `main-top`, `modal`. |
 | `component` | Yes | — | Renderer | Universal name, never a framework path. Examples: `Banner`, `OnboardingModal`. The renderer registry maps it to a real component, template, or view. Missing or unregistered = fail closed: render nothing, and the renderer logs a warning. CI can flag unregistered names. Not merged into component props. See [the renderer contract](../../renderers.md). |
-| `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. |
+| `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. Inclusive at that exact instant. |
 | `active.to` | No | Live forever | Engine | UTC. A date with no time is midnight UTC. Exclusive at that exact instant. The modal omits it. |
 | `priority` | No | 100 | Engine | Lower numbers win. Ties go to the older filename (`id` ascending). |
 | `max_impressions` | No | Unlimited | Engine and renderer | The count is reported `impression(id)` calls. At most one per message per page view (one `decide()` result). Re-renders and remounts do not count again. A new `decide()` call can. The renderer helper enforces that dedupe. A direct `impression(id)` call makes dedupe the caller's job. `decide()` only reads the count; a message at the cap is not a candidate. |
@@ -100,4 +100,4 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
 | `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
-| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core. Passed through as the component props, next to a separate `nudge_id`. Not written into `render_props`. If this object also has `nudge_id`, the renderer's value wins. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. |
+| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Opaque to the core. Passed through as the component props, next to a separate `nudge_id`. Not written into `render_props`. If this object also has `nudge_id`, the renderer's value wins. A `dismissible` value here is presentation only and does not gate `dismiss(id)`. `dismiss_on_click` means that control calls `dismiss` for this nudge when clicked. |

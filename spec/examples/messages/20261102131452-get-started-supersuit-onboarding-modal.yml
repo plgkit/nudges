@@ -16,4 +16,4 @@ render_props: # Required. {} is valid. Opaque to the core and passed through as 
       primary_cta:
         text: "Activate your suit"
         url: "https://supersuit.tech/examples/activate-your-suit"
-        dismiss_on_click: true
+        dismiss_on_click: true # This control calls dismiss for this nudge when clicked.
