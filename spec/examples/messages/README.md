@@ -14,7 +14,7 @@ Developers never write the ID in YAML. It always comes from the filename.
 
 Each item has `id` (the filename without `.yml`), `surface`, `component`, `dismissible`, and `render_props`.
 
-The host filters that list by `surface` and renders each slot. The wrapper looks up `component` in its registry, then passes `render_props` as that component's props, plus `id`, `dismissible`, `onDismiss`, and `onImpression`. A dumb component never wires this itself. `component` and `surface` are not merged into those props.
+The host filters that list by `surface` and renders each slot. The wrapper looks up `component` in its registry, then passes `render_props` as that component's props, plus the reserved wrapper props. Those names are listed once under Component registry. A dumb component never wires this itself. `component` and `surface` are not merged into those props.
 
 `decide()` is read-only. It only reads impression counts to enforce `max_impressions`. It does not record them. The wrapper dedupes impressions: `impression(id)` fires at most once per message per page view, one `decide()` result, no matter how many times the component re-renders or remounts. A new page view, a new `decide()` call such as navigation or reload, can count again. The wrapper owns that dedupe. Dumb components stay unaware of it. The first time that result's component actually mounts or becomes visible, the wrapper calls `onImpression`, and that calls `impression(id)`, mirroring `onDismiss` calling `dismiss(id)`. The close control calls `onDismiss`. The component does not wire either call. Prefetches, discarded server renders, and slots that never mount must not burn `max_impressions`.
 
@@ -28,7 +28,8 @@ def decide(location, ctx):
     candidates = [
         m for m in messages
         if m.location == location
-        and m.surface and m.component and m.render_props is not None  # missing required fields fail closed
+        and m.surface and m.component and m.render_props is not None  # missing required fields fail closed; {} is valid
+        and not reserved_render_prop(m.render_props)  # reserved wrapper props; engine skips, CI flags
         and is_active(m, now_utc)  # missing from = now; missing to = forever; to is exclusive; date-only = midnight UTC
         and not dismissed(ctx.user, m.id)
         and under_max_impressions(ctx.user, m)  # read the count only; missing = unlimited
@@ -69,7 +70,9 @@ Result: `[A, B]`.
 
 ## Component registry
 
-`component` is a universal name, never a framework path. Each wrapper keeps a registry from that name to the real component: a React component, a server template, or a mobile view. It passes `render_props` as the props, plus `id`, `dismissible`, `onDismiss`, and `onImpression`.
+`component` is a universal name, never a framework path. Each wrapper keeps a registry from that name to the real component: a React component, a server template, or a mobile view. It passes `render_props` as the props, plus the reserved wrapper props.
+
+Reserved top-level `render_props` keys, the only list of them: `id`, `dismissible`, `onDismiss`, `onImpression`. A message that uses any of them is invalid. The engine skips it, fail closed, the same as a missing required field, and CI validation flags it. An empty `render_props: {}` is valid.
 
 ```python
 registry = {
@@ -83,7 +86,7 @@ def render(item):
         log.warning("nudges: missing or unregistered component for %s", item.get("id"))
         return None  # fail closed: render nothing
     return Component(
-        **item["render_props"],
+        **item["render_props"],  # no reserved keys; the engine already skipped those messages
         id=item["id"],
         dismissible=item["dismissible"],
         onDismiss=lambda: dismiss(item["id"]),
@@ -124,4 +127,4 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | `audience.require_all` | No | Check passes | Engine | All named functions must be true. Omitted means this check passes. |
 | `audience.require_one_of` | No | Check passes | Engine | At least one must be true. Omitted means this check passes. The modal omits it. |
 | `audience.exclude` | No | Excludes no one | Engine | Any true name excludes the message. Omitted excludes no one. The modal omits it. |
-| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. Opaque to the core and passed through. The wrapper spreads these fields and adds `id`, `dismissible`, `onDismiss`, and `onImpression`. |
+| `render_props` | Yes | — | Renderer | Nothing renders without it. Missing = fail closed. `{}` is valid. Top-level keys must not be a reserved wrapper prop. That list is under Component registry, and it is not repeated here. Using one is invalid: the engine skips the message, fail closed, and CI flags it. Other keys are opaque and passed through. The wrapper spreads them and adds the reserved props. |

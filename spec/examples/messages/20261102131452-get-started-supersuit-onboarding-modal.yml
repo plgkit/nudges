@@ -8,7 +8,7 @@ max_impressions: 5 # Count of renderer-reported impressions. decide() only reads
 audience: # Optional. Omitted entirely means everyone matches. Omitted require_all or require_one_of passes; omitted exclude excludes no one. Functions live in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
   require_all: [has_active_supersuit_subscription]
 component: "OnboardingModal" # Required universal name, never a framework path. The wrapper registry maps it to the real component.
-render_props: # Required. Props for that component. Opaque to the core. Missing = fail closed.
+render_props: # Required. {} is valid. Must not use a reserved wrapper prop (see the messages README). Other keys are opaque. Missing = fail closed.
   slides:
     - title: "It's time to suit up"
       subtitle: "You need to believe, to achieve."
