@@ -4,14 +4,14 @@ Small banners and modals in named slots on your site. You pick **what** to show 
 
 ## Try it
 
-From the repo root:
+From `spec/examples/demo`:
 
 ```bash
-npm install --prefix spec/examples/demo
+npm install
 script/server
 ```
 
-Open the URL Vite prints. Switch **user_one** / **user_two**, close the banner and modal, reload.
+Open the URL Vite prints. Switch users in the top bar, close the banner and modal, reload.
 
 Other backends: `script/server --backend go` or `script/server --backend node`.
 
@@ -65,8 +65,7 @@ Walkthrough: [spec/examples/README.md](spec/examples/README.md).
 | [packages/python](packages/python), [packages/node](packages/node), [packages/go](packages/go) | `decide()`, `handle_event` / `HandleEvent`, `plgkit migrate` |
 | [packages/react](packages/react) | `NudgeProvider`, `NudgeSurface`, sample `Banner` / `OnboardingModal` |
 | [spec/examples](spec/examples) | Sample config, messages, audiences |
-| [spec/examples/demo](spec/examples/demo) | Browser demo + backends |
-| [script/server](script/server) | Run demo backend + Vite |
+| [spec/examples/demo](spec/examples/demo) | Browser demo + backends; run `script/server` from this folder |
 | [core/migrations](core/migrations) | SQL schema (copied into each language package) |
 
 Renderer notes: [spec/renderers.md](spec/renderers.md).

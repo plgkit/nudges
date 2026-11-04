@@ -9,8 +9,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(scriptDir, "..");
-const demoDir = path.join(repoRoot, "spec/examples/demo");
+const demoDir = path.resolve(scriptDir, "..");
+const repoRoot = path.resolve(demoDir, "../../..");
 
 const NODE_FLAGS = ["--disable-warning=ExperimentalWarning", "--experimental-strip-types"];
 
@@ -87,7 +87,7 @@ function parseBackend(argv) {
 
 function ensureDeps() {
   if (fs.existsSync(path.join(demoDir, "node_modules", "vite"))) return;
-  console.error("Run once: npm install --prefix spec/examples/demo");
+  console.error("Run once: npm install");
   process.exit(1);
 }
 
