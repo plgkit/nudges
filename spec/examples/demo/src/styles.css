@@ -152,6 +152,7 @@ h1 {
   margin-bottom: 1.5rem;
 }
 
+/* Home banner (matches the product mock) */
 .nudge-banner {
   position: relative;
   box-sizing: border-box;
@@ -164,7 +165,8 @@ h1 {
   color: var(--color-text);
 }
 
-.page-banner-slot .nudge-banner img {
+.page-banner-slot .nudge-banner img,
+header .nudge-banner img {
   display: none;
 }
 

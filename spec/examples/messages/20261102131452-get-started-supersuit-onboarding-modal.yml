@@ -3,7 +3,7 @@ surface: "modal" # Required. Missing = fail closed.
 active: # UTC. A date with no time is midnight UTC. Missing from = active immediately. Missing to = live forever. to is exclusive at that instant.
   from: "2026-10-30"
 priority: 1 # Optional, default 100. Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
-max_impressions: 5 # Count of impression(nudge_id, event) calls for this user_id. decide() only reads it.
+max_impressions: 5000000 # Count of impression(nudge_id, event) calls for this user_id. decide() only reads it.
 dismiss_scope: [organization_id] # Dismissal counts only when these ctx keys match. Omitted = everywhere for that user.
 audience: # Optional. Omitted entirely means everyone matches. Omitted require_all or require_one_of passes; omitted exclude excludes no one. Functions live in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
   require_all: [has_active_supersuit_subscription]
