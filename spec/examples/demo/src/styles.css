@@ -1,6 +1,6 @@
 :root {
   color: #1d1a16;
-  background: #f4f1ea;
+  background: #f5e8d3;
   font-family: Georgia, "Iowan Old Style", serif;
   line-height: 1.5;
 }
@@ -14,7 +14,7 @@ body {
 }
 
 .app.user-one {
-  background: #ffe8d6;
+  background: #f5e8d3;
 }
 
 .app.user-two {
@@ -27,18 +27,19 @@ body {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
-  padding: 0.9rem 1rem;
-  border-radius: 14px;
-  font-family: system-ui, sans-serif;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 .who strong {
-  font-size: 1.4rem;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .user-one .who {
-  background: #ff8a3d;
-  color: #2a1200;
+  background: #e89153;
+  color: #1d1a16;
 }
 
 .user-two .who {
@@ -48,18 +49,20 @@ body {
 
 .who span {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
 .who button {
   display: inline-block;
   margin: 0;
-  padding: 0.4rem 0.8rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
   background: #fff;
   color: #1d1a16;
   border: 2px solid transparent;
   font-weight: 600;
+  font-family: system-ui, -apple-system, sans-serif;
+  cursor: pointer;
 }
 
 .who button[aria-pressed="true"] {
@@ -74,38 +77,93 @@ body {
 
 nav {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  font-family: system-ui, sans-serif;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 600;
 }
 
 nav a {
   color: #1d1a16;
+  text-decoration: none;
 }
 
 nav a[aria-current="page"] {
-  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
 
 h1 {
-  font-size: 2rem;
-  margin: 0 0 0.4rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
 }
 
 header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 main {
   margin-bottom: 1.5rem;
 }
 
-aside,
-.nudge-modal [role="dialog"] {
+/* Home banner (matches the product mock) */
+.nudge-banner {
+  position: relative;
+  box-sizing: border-box;
   background: #fff;
-  border: 1px solid #e3dcd0;
-  border-radius: 12px;
-  padding: 1rem 1.1rem 1.15rem;
+  border: 1px solid #e5e2dc;
+  border-radius: 14px;
+  padding: 1.75rem 2rem 1.5rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1d1a16;
+}
+
+header .nudge-banner img {
+  display: none;
+}
+
+.nudge-banner h2 {
+  font-family: Georgia, "Iowan Old Style", serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 0.65rem;
+  padding-right: 1.75rem;
+}
+
+.nudge-banner p {
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0 0 1.25rem;
+  max-width: 36rem;
+}
+
+.nudge-banner__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  margin: 0;
+  padding: 0.15rem 0.45rem;
+  border: 0;
+  background: transparent;
+  color: #1d1a16;
+  cursor: pointer;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.nudge-banner a {
+  display: inline-block;
+  background: #1d1a16;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 0.625rem 1.25rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .nudge-modal {
@@ -125,9 +183,12 @@ aside,
   max-height: calc(100vh - 2.5rem);
   overflow: auto;
   box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #e3dcd0;
+  border-radius: 12px;
+  padding: 1rem 1.1rem 1.15rem;
 }
 
-aside img,
 .nudge-modal img {
   display: block;
   width: 100%;
@@ -137,18 +198,15 @@ aside img,
   background: #e7eef6;
 }
 
-aside h2,
 .nudge-modal h2 {
   font-size: 1.35rem;
   margin: 0.85rem 0 0.25rem;
 }
 
-aside p,
 .nudge-modal p {
   margin: 0.25rem 0 0.9rem;
 }
 
-aside a,
 .nudge-modal a {
   display: inline-block;
   background: #1d1a16;
@@ -156,11 +214,11 @@ aside a,
   text-decoration: none;
   border-radius: 999px;
   padding: 0.45rem 0.9rem;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 0.95rem;
 }
 
-button {
+.nudge-modal button {
   display: block;
   margin-top: 0.85rem;
   padding: 0;
@@ -168,6 +226,6 @@ button {
   background: transparent;
   color: #5c564e;
   cursor: pointer;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 0.95rem;
 }

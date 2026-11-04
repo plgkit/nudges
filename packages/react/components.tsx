@@ -35,17 +35,22 @@ export type OnboardingModalProps = {
 export function Banner(props: BannerProps) {
   const { click, dismiss } = useNudgeTracking(props.nudge_id);
   return (
-    <aside>
+    <aside className="nudge-banner">
+      {props.dismissible ? (
+        <button
+          type="button"
+          className="nudge-banner__close"
+          aria-label="Close"
+          onClick={() => dismiss()}
+        >
+          ×
+        </button>
+      ) : null}
       {props.asset ? <img src={props.asset} alt={props.title ?? ""} /> : null}
       {props.title ? <h2>{props.title}</h2> : null}
       {props.body ? <p>{props.body}</p> : null}
       {props.primary_cta ? (
         <Cta cta={props.primary_cta} click={click} dismiss={dismiss} />
-      ) : null}
-      {props.dismissible ? (
-        <button type="button" onClick={() => dismiss()}>
-          Close
-        </button>
       ) : null}
     </aside>
   );
