@@ -1,77 +1,146 @@
-/*
- * Design tokens (Refactoring UI, coder-friendly)
- *
- * 1. Pick one brand hue (--hue-brand) for accents (top bar, links).
- * 2. Pick one neutral hue (--hue-neutral) — warm grays are not gray=0; they share a hue.
- * 3. Use lightness steps for hierarchy: bg (light) → surface → text (dark).
- * 4. Reference tokens below, not raw hex, in component rules.
- *
- * Tweak palette: only change the HSL numbers in :root.
- */
-
+/* Design system tokens. Component rules reference these variables. */
 :root {
-  --hue-brand: 28;
-  --hue-neutral: 35;
+  --color-primary-50: #F4EBFE;
+  --color-primary-100: #E4D1FB;
+  --color-primary-200: #BC96F2;
+  --color-primary-300: #8C59E3;
+  --color-primary-400: #6932D5;
+  --color-primary-500: #5B2ACF;
+  --color-primary-600: #461DB7;
+  --color-primary-700: #2D1090;
+  --color-primary-800: #19066A;
+  --color-primary-900: #0E015B;
 
-  --color-bg: hsl(var(--hue-neutral) 48% 91%);
-  --color-topbar: hsl(var(--hue-brand) 45% 58%);
-  --color-topbar-text: hsl(var(--hue-neutral) 25% 14%);
+  --color-neutral-50: #F7F4FA;
+  --color-neutral-100: #E6E0EF;
+  --color-neutral-200: #C0B5D2;
+  --color-neutral-300: #9588AE;
+  --color-neutral-400: #786B92;
+  --color-neutral-500: #70658A;
+  --color-neutral-600: #5C5079;
+  --color-neutral-700: #40365D;
+  --color-neutral-800: #282041;
+  --color-neutral-900: #1D1636;
 
-  --color-surface: hsl(0 0% 100%);
-  --color-border: hsl(var(--hue-neutral) 22% 84%);
-  --color-border-strong: hsl(var(--hue-neutral) 18% 72%);
+  --color-accent-50: #FAEDFD;
+  --color-accent-100: #F0D3F8;
+  --color-accent-200: #D69BE9;
+  --color-accent-300: #B461D4;
+  --color-accent-400: #973DC0;
+  --color-accent-500: #8A39B6;
+  --color-accent-600: #742BA2;
+  --color-accent-700: #551A81;
+  --color-accent-800: #3B0E61;
+  --color-accent-900: #2E0755;
 
-  --color-text: hsl(var(--hue-neutral) 25% 12%);
-  --color-text-muted: hsl(var(--hue-neutral) 12% 40%);
+  --color-danger-50: #FEEEEB;
+  --color-danger-100: #FBD6CF;
+  --color-danger-200: #F19E92;
+  --color-danger-300: #E26153;
+  --color-danger-400: #D2382B;
+  --color-danger-500: #C73128;
+  --color-danger-600: #B1211C;
+  --color-danger-700: #8C1110;
+  --color-danger-800: #690606;
+  --color-danger-900: #5B0101;
 
-  --color-cta: hsl(var(--hue-neutral) 25% 12%);
-  --color-cta-text: hsl(0 0% 100%);
+  --color-warning-50: #FFFCEB;
+  --color-warning-100: #FFF5CE;
+  --color-warning-200: #FCE190;
+  --color-warning-300: #F5C34F;
+  --color-warning-400: #ECA725;
+  --color-warning-500: #EB9919;
+  --color-warning-600: #D77E0B;
+  --color-warning-700: #AE5C02;
+  --color-warning-800: #843F00;
+  --color-warning-900: #703100;
 
-  --color-scrim: hsl(var(--hue-neutral) 25% 12% / 55%);
+  --color-success-50: #ECFEFB;
+  --color-success-100: #CCF8F1;
+  --color-success-200: #85E9D4;
+  --color-success-300: #3CD3AE;
+  --color-success-400: #2BA180;
+  --color-success-500: #289673;
+  --color-success-600: #1D8762;
+  --color-success-700: #126E4A;
+  --color-success-800: #095735;
+  --color-success-900: #044E2B;
 
-  --font-display: Georgia, "Iowan Old Style", serif;
-  --font-ui: system-ui, -apple-system, sans-serif;
+  --font-display: "Libre Baskerville", system-ui, sans-serif;
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", system-ui, sans-serif;
+  --weight-display: 600;
+  --weight-ui: 400;
+  --track-display: -0.02em;
+  --leading-body: 1.5;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
+  --text-5xl: 48px;
 
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-pill: 999px;
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+  --space-12: 96px;
+  --radius-sm: 7px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+  --shadow-sm: 0 1px 2px hsl(0 0% 0% / 6%), 0 1px 3px hsl(0 0% 0% / 8%);
+  --shadow-md: 0 4px 6px hsl(0 0% 0% / 8%), 0 2px 4px hsl(0 0% 0% / 6%);
 
-  --shadow-card: 0 1px 2px hsl(var(--hue-neutral) 25% 12% / 6%);
-
-  color: var(--color-text);
-  background: var(--color-bg);
-  font-family: var(--font-display);
-  line-height: 1.5;
+  color: var(--color-neutral-900);
+  background: var(--color-neutral-100);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-ui);
+  line-height: var(--leading-body);
 }
 
 body {
   margin: 0;
 }
 
+button {
+  font: inherit;
+}
+
 .app {
   min-height: 100vh;
-  background: var(--color-bg);
+  background: var(--color-neutral-100);
 }
 
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.65rem 1.25rem;
-  background: var(--color-topbar);
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-primary-600);
+  box-shadow: var(--shadow-sm);
   font-family: var(--font-ui);
+  color: var(--color-primary-50);
 }
 
 .topbar__nav {
   display: flex;
-  gap: 1.25rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  gap: var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-display);
 }
 
 .topbar__nav a {
-  color: var(--color-topbar-text);
+  color: var(--color-primary-50);
   text-decoration: none;
 }
 
@@ -82,28 +151,28 @@ body {
 
 .user-stack {
   position: relative;
-  width: 2.65rem;
-  height: 2rem;
+  width: calc(var(--space-6) + var(--space-4));
+  height: var(--space-6);
   flex-shrink: 0;
-  --avatar-peek: 0.4rem;
-  --avatar-peek-hover: 0.95rem;
+  --avatar-peek: var(--space-2);
+  --avatar-peek-hover: var(--space-4);
 }
 
 .user-stack__avatar {
   box-sizing: border-box;
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-pill);
+  width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-ui);
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-display);
   line-height: 1;
-  background: var(--color-surface);
-  color: var(--color-text);
-  border: 2px solid hsl(var(--hue-brand) 40% 52%);
+  background: var(--color-primary-50);
+  color: var(--color-primary-800);
+  border: 2px solid var(--color-primary-300);
 }
 
 .user-stack__avatar--front {
@@ -128,41 +197,57 @@ body {
 }
 
 .user-stack__avatar--back:focus-visible {
-  outline: 2px solid var(--color-topbar-text);
-  outline-offset: 2px;
+  outline: 2px solid var(--color-primary-50);
+  outline-offset: var(--space-1);
 }
 
 .wrap {
-  max-width: 40rem;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem;
+  padding: var(--space-5) var(--space-5) var(--space-8);
 }
 
 h1 {
-  font-size: 2.25rem;
-  font-weight: 700;
-  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--track-display);
+  line-height: 1.2;
+  margin: 0 0 var(--space-2);
+  color: var(--color-neutral-900);
+}
+
+h1 + p,
+.wrap > p {
+  margin: 0;
+  max-width: 576px;
+  color: var(--color-neutral-700);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
 }
 
 .page-banner-slot {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-5);
 }
 
 .page-modal-slot {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-5);
 }
 
 /* Home banner (matches the product mock) */
 .nudge-banner {
   position: relative;
   box-sizing: border-box;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1.75rem 2rem 1.5rem;
-  box-shadow: var(--shadow-card);
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
   font-family: var(--font-ui);
-  color: var(--color-text);
+  font-size: var(--text-base);
+  font-weight: var(--weight-ui);
+  line-height: var(--leading-body);
+  color: var(--color-neutral-900);
 }
 
 .page-banner-slot .nudge-banner img,
@@ -172,45 +257,47 @@ header .nudge-banner img {
 
 .nudge-banner h2 {
   font-family: var(--font-display);
-  font-size: 1.65rem;
-  font-weight: 700;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--track-display);
   line-height: 1.25;
-  margin: 0 0 0.65rem;
-  padding-right: 1.75rem;
+  margin: 0 0 var(--space-3);
+  padding-right: var(--space-6);
 }
 
 .nudge-banner p {
-  font-size: 1rem;
-  line-height: 1.55;
-  margin: 0 0 1.25rem;
-  max-width: 36rem;
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  margin: 0 0 var(--space-5);
+  max-width: 576px;
+  color: var(--color-neutral-700);
 }
 
 .nudge-banner__close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: var(--space-4);
+  right: var(--space-4);
   margin: 0;
-  padding: 0.15rem 0.45rem;
+  padding: var(--space-1) var(--space-2);
   border: 0;
   background: transparent;
-  color: var(--color-text);
+  color: var(--color-neutral-700);
   cursor: pointer;
   font-family: var(--font-ui);
-  font-size: 1.35rem;
+  font-size: var(--text-xl);
   line-height: 1;
 }
 
 .nudge-banner a {
   display: inline-block;
-  background: var(--color-cta);
-  color: var(--color-cta-text);
+  background: var(--color-primary-600);
+  color: var(--color-primary-50);
   text-decoration: none;
   border-radius: var(--radius-sm);
-  padding: 0.625rem 1.25rem;
+  padding: var(--space-3) var(--space-5);
   font-family: var(--font-ui);
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-display);
 }
 
 .nudge-modal {
@@ -221,58 +308,69 @@ header .nudge-banner img {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding: 1.25rem;
-  background: var(--color-scrim);
+  padding: var(--space-5);
+  background: color-mix(in srgb, var(--color-neutral-900) 55%, transparent);
+  font-family: var(--font-ui);
+  color: var(--color-neutral-900);
 }
 
 .nudge-modal [role="dialog"] {
-  width: min(40rem, 100%);
-  max-height: calc(100vh - 2.5rem);
+  width: min(640px, 100%);
+  max-height: calc(100vh - var(--space-8));
   overflow: auto;
   box-sizing: border-box;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1rem 1.1rem 1.15rem;
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-5);
 }
 
 .nudge-modal img {
   display: block;
   width: 100%;
-  max-height: 12rem;
+  max-height: calc(var(--space-12) * 2);
   object-fit: cover;
   border-radius: var(--radius-sm);
-  background: hsl(var(--hue-neutral) 30% 92%);
+  background: var(--color-neutral-200);
 }
 
 .nudge-modal h2 {
-  font-size: 1.35rem;
-  margin: 0.85rem 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--track-display);
+  line-height: 1.25;
+  margin: var(--space-4) 0 var(--space-1);
 }
 
 .nudge-modal p {
-  margin: 0.25rem 0 0.9rem;
+  margin: var(--space-1) 0 var(--space-4);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--color-neutral-700);
 }
 
 .nudge-modal a {
   display: inline-block;
-  background: var(--color-cta);
-  color: var(--color-cta-text);
+  background: var(--color-primary-600);
+  color: var(--color-primary-50);
   text-decoration: none;
   border-radius: var(--radius-sm);
-  padding: 0.45rem 0.9rem;
+  padding: var(--space-2) var(--space-4);
   font-family: var(--font-ui);
-  font-size: 0.95rem;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-display);
 }
 
 .nudge-modal button {
   display: block;
-  margin-top: 0.85rem;
-  padding: 0;
+  margin-top: var(--space-4);
+  padding: var(--space-0);
   border: 0;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-neutral-600);
   cursor: pointer;
   font-family: var(--font-ui);
-  font-size: 0.95rem;
+  font-size: var(--text-sm);
 }
