@@ -25,6 +25,37 @@ function pageFromHash(): "home" | "get-started" {
   return window.location.hash === "#/get-started" ? "get-started" : "home";
 }
 
+function otherUser(user: DemoUser): DemoUser {
+  return user.name === "user_one"
+    ? { id: "2", name: "user_two" }
+    : { id: "1", name: "user_one" };
+}
+
+function UserSwitcher({
+  user,
+  onChoose,
+}: {
+  user: DemoUser;
+  onChoose: (name: DemoUser["name"]) => void;
+}) {
+  const inactive = otherUser(user);
+  return (
+    <div className="user-stack">
+      <button
+        type="button"
+        className="user-stack__avatar user-stack__avatar--back"
+        aria-label={`Switch to user ${inactive.id}`}
+        onClick={() => onChoose(inactive.name)}
+      >
+        {inactive.id}
+      </button>
+      <div className="user-stack__avatar user-stack__avatar--front" aria-hidden="true">
+        {user.id}
+      </div>
+    </div>
+  );
+}
+
 export function App() {
   const [page, setPage] = useState(pageFromHash);
   const [user, setUser] = useState<DemoUser | null>(null);
@@ -73,20 +104,9 @@ export function App() {
   }
 
   return (
-    <div className={user.name === "user_one" ? "app user-one" : "app user-two"}>
-      <div className="wrap">
-        <div className="who">
-          <strong>Signed in as {user.name}</strong>
-          <span>
-            <button type="button" aria-pressed={user.name === "user_one"} onClick={() => void choose("user_one")}>
-              user_one
-            </button>
-            <button type="button" aria-pressed={user.name === "user_two"} onClick={() => void choose("user_two")}>
-              user_two
-            </button>
-          </span>
-        </div>
-        <nav>
+    <div className="app">
+      <header className="topbar">
+        <nav className="topbar__nav">
           <a href="#/home" aria-current={page === "home" ? "page" : undefined}>
             Home
           </a>
@@ -94,6 +114,9 @@ export function App() {
             Get started
           </a>
         </nav>
+        <UserSwitcher user={user} onChoose={(name) => void choose(name)} />
+      </header>
+      <div className="wrap">
         {page === "home" ? <Home user={user} /> : <GetStarted user={user} />}
       </div>
     </div>
@@ -110,10 +133,8 @@ function Home({ user }: { user: DemoUser }) {
       registry={{ Banner }}
       decide={decide}
     >
-      <header>
-        <div>
-          <NudgeSurface surface="main-top" />
-        </div>
+      <header className="page-banner-slot">
+        <NudgeSurface surface="main-top" />
       </header>
       <h1>Home</h1>
       <p>The banner sits in the header, a few layers down.</p>
@@ -131,7 +152,7 @@ function GetStarted({ user }: { user: DemoUser }) {
       registry={{ OnboardingModal }}
       decide={decide}
     >
-      <main>
+      <main className="page-modal-slot">
         <NudgeSurface surface="modal" />
       </main>
       <h1>Get started</h1>

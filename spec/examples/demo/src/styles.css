@@ -1,7 +1,46 @@
+/*
+ * Design tokens (Refactoring UI, coder-friendly)
+ *
+ * 1. Pick one brand hue (--hue-brand) for accents (top bar, links).
+ * 2. Pick one neutral hue (--hue-neutral) — warm grays are not gray=0; they share a hue.
+ * 3. Use lightness steps for hierarchy: bg (light) → surface → text (dark).
+ * 4. Reference tokens below, not raw hex, in component rules.
+ *
+ * Tweak palette: only change the HSL numbers in :root.
+ */
+
 :root {
-  color: #1d1a16;
-  background: #f4f1ea;
-  font-family: Georgia, "Iowan Old Style", serif;
+  --hue-brand: 28;
+  --hue-neutral: 35;
+
+  --color-bg: hsl(var(--hue-neutral) 48% 91%);
+  --color-topbar: hsl(var(--hue-brand) 45% 58%);
+  --color-topbar-text: hsl(var(--hue-neutral) 25% 14%);
+
+  --color-surface: hsl(0 0% 100%);
+  --color-border: hsl(var(--hue-neutral) 22% 84%);
+  --color-border-strong: hsl(var(--hue-neutral) 18% 72%);
+
+  --color-text: hsl(var(--hue-neutral) 25% 12%);
+  --color-text-muted: hsl(var(--hue-neutral) 12% 40%);
+
+  --color-cta: hsl(var(--hue-neutral) 25% 12%);
+  --color-cta-text: hsl(0 0% 100%);
+
+  --color-scrim: hsl(var(--hue-neutral) 25% 12% / 55%);
+
+  --font-display: Georgia, "Iowan Old Style", serif;
+  --font-ui: system-ui, -apple-system, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px hsl(var(--hue-neutral) 25% 12% / 6%);
+
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: var(--font-display);
   line-height: 1.5;
 }
 
@@ -11,59 +50,86 @@ body {
 
 .app {
   min-height: 100vh;
+  background: var(--color-bg);
 }
 
-.app.user-one {
-  background: #ffe8d6;
-}
-
-.app.user-two {
-  background: #d9e8ff;
-}
-
-.who {
+.topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0.9rem 1rem;
-  border-radius: 14px;
-  font-family: system-ui, sans-serif;
+  padding: 0.65rem 1.25rem;
+  background: var(--color-topbar);
+  font-family: var(--font-ui);
 }
 
-.who strong {
-  font-size: 1.4rem;
-}
-
-.user-one .who {
-  background: #ff8a3d;
-  color: #2a1200;
-}
-
-.user-two .who {
-  background: #3d7eff;
-  color: #fff;
-}
-
-.who span {
+.topbar__nav {
   display: flex;
-  gap: 0.4rem;
-}
-
-.who button {
-  display: inline-block;
-  margin: 0;
-  padding: 0.4rem 0.8rem;
-  border-radius: 999px;
-  background: #fff;
-  color: #1d1a16;
-  border: 2px solid transparent;
+  gap: 1.25rem;
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
-.who button[aria-pressed="true"] {
-  border-color: #1d1a16;
+.topbar__nav a {
+  color: var(--color-topbar-text);
+  text-decoration: none;
+}
+
+.topbar__nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.user-stack {
+  position: relative;
+  width: 2.65rem;
+  height: 2rem;
+  flex-shrink: 0;
+  --avatar-peek: 0.4rem;
+  --avatar-peek-hover: 0.95rem;
+}
+
+.user-stack__avatar {
+  box-sizing: border-box;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid hsl(var(--hue-brand) 40% 52%);
+}
+
+.user-stack__avatar--front {
+  position: relative;
+  z-index: 2;
+}
+
+.user-stack__avatar--back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  transform: translateX(var(--avatar-peek));
+  transition: transform 0.15s ease;
+}
+
+.user-stack:hover .user-stack__avatar--back {
+  transform: translateX(var(--avatar-peek-hover));
+}
+
+.user-stack__avatar--back:focus-visible {
+  outline: 2px solid var(--color-topbar-text);
+  outline-offset: 2px;
 }
 
 .wrap {
@@ -72,40 +138,77 @@ body {
   padding: 1.5rem 1.25rem 3rem;
 }
 
-nav {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  font-family: system-ui, sans-serif;
-}
-
-nav a {
-  color: #1d1a16;
-}
-
-nav a[aria-current="page"] {
-  font-weight: 700;
-}
-
 h1 {
-  font-size: 2rem;
-  margin: 0 0 0.4rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
 }
 
-header {
+.page-banner-slot {
+  margin-bottom: 1.25rem;
+}
+
+.page-modal-slot {
   margin-bottom: 1.5rem;
 }
 
-main {
-  margin-bottom: 1.5rem;
+.nudge-banner {
+  position: relative;
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.75rem 2rem 1.5rem;
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-ui);
+  color: var(--color-text);
 }
 
-aside,
-.nudge-modal [role="dialog"] {
-  background: #fff;
-  border: 1px solid #e3dcd0;
-  border-radius: 12px;
-  padding: 1rem 1.1rem 1.15rem;
+.page-banner-slot .nudge-banner img {
+  display: none;
+}
+
+.nudge-banner h2 {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 0.65rem;
+  padding-right: 1.75rem;
+}
+
+.nudge-banner p {
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0 0 1.25rem;
+  max-width: 36rem;
+}
+
+.nudge-banner__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  margin: 0;
+  padding: 0.15rem 0.45rem;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.nudge-banner a {
+  display: inline-block;
+  background: var(--color-cta);
+  color: var(--color-cta-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 1.25rem;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .nudge-modal {
@@ -117,7 +220,7 @@ aside,
   justify-content: center;
   box-sizing: border-box;
   padding: 1.25rem;
-  background: rgb(29 26 22 / 55%);
+  background: var(--color-scrim);
 }
 
 .nudge-modal [role="dialog"] {
@@ -125,49 +228,49 @@ aside,
   max-height: calc(100vh - 2.5rem);
   overflow: auto;
   box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem 1.15rem;
 }
 
-aside img,
 .nudge-modal img {
   display: block;
   width: 100%;
   max-height: 12rem;
   object-fit: cover;
-  border-radius: 8px;
-  background: #e7eef6;
+  border-radius: var(--radius-sm);
+  background: hsl(var(--hue-neutral) 30% 92%);
 }
 
-aside h2,
 .nudge-modal h2 {
   font-size: 1.35rem;
   margin: 0.85rem 0 0.25rem;
 }
 
-aside p,
 .nudge-modal p {
   margin: 0.25rem 0 0.9rem;
 }
 
-aside a,
 .nudge-modal a {
   display: inline-block;
-  background: #1d1a16;
-  color: #fff;
+  background: var(--color-cta);
+  color: var(--color-cta-text);
   text-decoration: none;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   padding: 0.45rem 0.9rem;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
 }
 
-button {
+.nudge-modal button {
   display: block;
   margin-top: 0.85rem;
   padding: 0;
   border: 0;
   background: transparent;
-  color: #5c564e;
+  color: var(--color-text-muted);
   cursor: pointer;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
 }
