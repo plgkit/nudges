@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RUI Studio</title>
+    <title>RUI Studio — pick colors & fonts for your app</title>
     <style>
       * {
         box-sizing: border-box;
@@ -75,6 +75,25 @@
         letter-spacing: 0.04em;
         color: #888;
         margin-bottom: 0.25rem;
+      }
+
+      .do-next {
+        background: #fff8f0;
+        border: 1px solid #e8d4bc;
+        border-radius: 10px;
+        padding: 0.6rem 0.75rem;
+        margin: 0 0 1rem;
+        font-size: 0.88rem;
+      }
+
+      .do-next strong {
+        color: #8a4b12;
+      }
+
+      .skip-note {
+        font-size: 0.85rem;
+        color: #555;
+        margin: 0 0 0.75rem;
       }
 
       .wizard-step {
@@ -366,91 +385,107 @@
     <div class="app">
       <aside class="panel">
         <h1>RUI Studio</h1>
-        <p class="progress" id="progress">Step 1 of 5</p>
+        <p class="progress" id="progress">Welcome</p>
 
         <div class="wizard-step" data-step="0" data-active="true">
-          <h2 class="step-title">Start here</h2>
+          <h2 class="step-title">Welcome</h2>
           <p class="step-body">
-            Five clicks. You pick a vibe and one brand color. We fill in spacing, type, and grays. Preview updates on the
-            right. At the end you download a CSS file for your project.
+            This helps you pick colors and fonts for a simple app screen. You make a few choices on the left. The fake app
+            on the right updates as you go.
+          </p>
+          <div class="do-next"><strong>Your job:</strong> click <strong>Start</strong>, then keep clicking <strong>Continue</strong> until you can download a CSS file.</div>
+          <p class="step-body">
+            We already picked good defaults (cream page, soft orange bar — like the plgkit demo). You only need to change
+            things if you want a different look.
           </p>
           <div class="book-tip">
-            <strong>Refactoring UI · Starting from scratch</strong>
-            Start with a real feature on the page (like the banner card), not abstract layout chrome.
+            <strong>Good habit</strong>
+            Design a real piece of the app first (here: the white announcement card), not empty layout shells.
           </div>
-          <p class="step-body">
-            <strong>Default:</strong> warm cream + muted orange — matches the plgkit nudges demo mock.
-          </p>
         </div>
 
         <div class="wizard-step" data-step="1">
-          <h2 class="step-title">1. Pick a personality</h2>
-          <p class="step-body">Fonts and corner feel. You can change details later under Advanced.</p>
+          <h2 class="step-title">Step 1 — What should it feel like?</h2>
+          <p class="step-body">Tap one button. It sets fonts and how round the corners are.</p>
+          <div class="do-next"><strong>Your job:</strong> pick one option, then click <strong>Continue</strong>.</div>
           <div class="choice-grid" id="personalityChoices"></div>
           <div class="book-tip">
-            <strong>Refactoring UI · Choose a personality</strong>
-            Serif headlines feel classic; neutral sans feels plain and lets color do the work.
+            <strong>Good habit</strong>
+            Fancy serif titles feel “classic.” Plain system fonts feel “app-like.” Neither is wrong — pick a mood.
           </div>
         </div>
 
         <div class="wizard-step" data-step="2">
-          <h2 class="step-title">2. Pick one brand color</h2>
-          <p class="step-body">Click the square. We build backgrounds, text, and borders from that hue — you don’t set S and L by hand.</p>
-          <label for="brandColor">Brand color</label>
+          <h2 class="step-title">Step 2 — Pick your main color</h2>
+          <p class="step-body">
+            This is the color of the top bar. Click the big color square and choose something you like. We figure out
+            the page background, text, and borders for you.
+          </p>
+          <div class="do-next"><strong>Your job:</strong> click the color square (or skip if you like what you see).</div>
+          <label for="brandColor">Main color (top bar)</label>
           <input type="color" id="brandColor" value="#c48855" />
-          <label>Optional: Refactoring UI palette JSON</label>
+          <label for="paletteFile">Already have Refactoring UI palette files? (optional)</label>
           <input type="file" id="paletteFile" accept=".json,application/json" />
-          <p class="step-body" style="font-size: 0.8rem; color: #666">
-            From your download zip: <code>Color Palettes JSON</code> → any <code>palette-XX.json</code>. Stays on your
-            machine; nothing is uploaded.
+          <p class="step-body" style="font-size: 0.82rem; color: #555">
+            In your book download, open the folder <code>Color Palettes JSON</code> and choose any file like
+            <code>palette-01.json</code>. It never leaves your computer.
           </p>
           <div class="book-tip">
-            <strong>Refactoring UI · Working with color</strong>
-            Use HSL thinking: one hue family for grays, separate shades for UI — not five random hex codes.
+            <strong>Good habit</strong>
+            You need more than one swatch in a real app. Either use a palette file from the book, or let this tool fill in
+            the rest from your one main color.
           </div>
         </div>
 
         <div class="wizard-step" data-step="3">
-          <h2 class="step-title">3. Type scale</h2>
-          <p class="step-body">Defaults are fine for most apps: 16px body and a modest scale. Limit how many sizes you use in real UI.</p>
-          <label for="baseSize">Body size (px)</label>
+          <h2 class="step-title">Step 3 — Text sizes</h2>
+          <p class="skip-note">Most people can leave this alone and just hit Continue.</p>
+          <p class="step-body">
+            Body text starts at 16 pixels. Headlines grow from that in fixed steps so you don’t end up with 47 random font
+            sizes.
+          </p>
+          <label for="baseSize">Size of normal paragraph text</label>
           <input type="number" id="baseSize" min="15" max="18" value="16" />
-          <label for="scaleRatio">Scale tightness</label>
+          <label for="scaleRatio">How big headlines get compared to body text</label>
           <select id="scaleRatio">
-            <option value="1.125">Compact</option>
-            <option value="1.2" selected>Balanced (default)</option>
-            <option value="1.25">Roomy</option>
+            <option value="1.125">Small jumps (compact)</option>
+            <option value="1.2" selected>Medium jumps (default)</option>
+            <option value="1.25">Big jumps (roomy)</option>
           </select>
           <div class="book-tip">
-            <strong>Refactoring UI · Designing text</strong>
-            Establish a type scale up front, then pick from it — don’t invent a new size for every line.
+            <strong>Good habit</strong>
+            Pick sizes from a short list. If every line needs a new size, the page will look messy.
           </div>
         </div>
 
         <div class="wizard-step" data-step="4">
-          <h2 class="step-title">4. Spacing</h2>
-          <p class="step-body">8px grid is the default (Refactoring UI spacing system). Padding and gaps should land on these steps.</p>
-          <label for="spaceUnit">Grid</label>
+          <h2 class="step-title">Step 4 — Gaps and padding</h2>
+          <p class="skip-note">Default is fine — click Continue unless you want tighter layouts.</p>
+          <p class="step-body">
+            Padding and gaps snap to a simple grid (8 pixels by default) so spacing looks even.
+          </p>
+          <label for="spaceUnit">Grid size</label>
           <select id="spaceUnit">
-            <option value="8" selected>8px (recommended)</option>
-            <option value="4">4px (dense)</option>
+            <option value="8" selected>8 pixels (recommended)</option>
+            <option value="4">4 pixels (tighter UI)</option>
           </select>
           <div class="book-tip">
-            <strong>Refactoring UI · Layout and spacing</strong>
-            Start with too much whitespace; tighten later. Avoid ambiguous “is this margin or padding?” gaps.
+            <strong>Good habit</strong>
+            When in doubt, leave more empty space first. You can always tighten later.
           </div>
         </div>
 
         <div class="wizard-step" data-step="5">
-          <h2 class="step-title">5. Export</h2>
+          <h2 class="step-title">Step 5 — Take it to your project</h2>
           <p class="step-body">
-            Download <code>tokens.css</code> and paste the <code>:root</code> block into your app stylesheet (e.g.
-            <code>styles.css</code>).
+            Click <strong>Download CSS</strong>. You get a file named <code>tokens.css</code>. Open your project’s main
+            stylesheet (often <code>styles.css</code>) and paste everything in that file at the top.
           </p>
+          <div class="do-next"><strong>Your job:</strong> download, paste into CSS, reload your app.</div>
           <div class="export-box" id="exportPreview"></div>
           <div class="book-tip">
-            <strong>Refactoring UI · Hierarchy</strong>
-            Emphasize by de-emphasizing: quiet chrome, one loud primary action per card.
+            <strong>Good habit</strong>
+            Make the important thing stand out by keeping everything else quiet — one main button per card.
           </div>
         </div>
 
@@ -485,7 +520,7 @@
                 <span class="cta">Join the waitlist</span>
               </article>
               <h1 class="preview-page-title">Home</h1>
-              <p class="preview-muted">Muted supporting line — not your main paragraph.</p>
+              <p class="preview-muted">Secondary line (lighter color — not for your main story).</p>
             </div>
           </div>
         </div>
@@ -498,8 +533,8 @@
 
       const PERSONALITIES = {
         warm: {
-          name: "Warm & classic",
-          desc: "Serif headlines + soft corners — good for the Supersuit-style demo.",
+          name: "Warm (like the demo)",
+          desc: "Cream page, soft orange bar, serif titles.",
           fontDisplay: "Georgia, 'Iowan Old Style', serif",
           fontUi: "system-ui, -apple-system, sans-serif",
           radiusSm: 8,
@@ -509,8 +544,8 @@
           brandColor: "#c48855",
         },
         calm: {
-          name: "Calm & professional",
-          desc: "All system UI, tighter corners — SaaS / dashboard feel.",
+          name: "Calm office app",
+          desc: "Gray-blue bar, no serif, straighter corners.",
           fontDisplay: "system-ui, -apple-system, sans-serif",
           fontUi: "system-ui, -apple-system, sans-serif",
           radiusSm: 6,
@@ -520,8 +555,8 @@
           brandColor: "#486581",
         },
         playful: {
-          name: "Soft & friendly",
-          desc: "Rounded corners, slightly brighter brand — marketing pages.",
+          name: "Bright and friendly",
+          desc: "Pink accent, round corners, casual fonts.",
           fontDisplay: "Verdana, sans-serif",
           fontUi: "system-ui, -apple-system, sans-serif",
           radiusSm: 10,
@@ -727,7 +762,7 @@
         const colors = importedPalette ? colorsFromImport(importedPalette) : colorsFromHsl(state);
         if (!colors) {
           importedPalette = null;
-          els.status.textContent = "Could not read that JSON — using generated colors.";
+          els.status.textContent = "That file didn’t work. We kept the colors from your main color square.";
         }
         const finalColors = colors || colorsFromHsl(state);
         const ts = typeScale(state.baseSize, state.scaleRatio);
@@ -738,7 +773,7 @@
       function cssText() {
         const { colors, ts, sp } = buildTokens();
         return `:root {
-  /* RUI Studio — paste into your app stylesheet */
+  /* Paste this whole block at the top of your styles.css */
   --hue-brand: ${state.hueBrand};
   --hue-neutral: ${state.hueNeutral};
 
@@ -820,7 +855,15 @@
         document.querySelectorAll(".wizard-step").forEach((el) => {
           el.dataset.active = el.dataset.step === String(n) ? "true" : "false";
         });
-        els.progress.textContent = n === 0 ? "Welcome" : `Step ${n} of ${STEPS}`;
+        const titles = [
+          "Welcome",
+          "Step 1 of 5 — Feel",
+          "Step 2 of 5 — Main color",
+          "Step 3 of 5 — Text (optional)",
+          "Step 4 of 5 — Spacing (optional)",
+          "Step 5 of 5 — Download",
+        ];
+        els.progress.textContent = titles[n] || "";
         els.backBtn.disabled = n === 0;
         if (n === 0) els.nextBtn.textContent = "Start";
         else if (n === STEPS) els.nextBtn.textContent = "Download CSS";
@@ -842,11 +885,11 @@
         try {
           const text = await file.text();
           importedPalette = parseRuiPalette(text);
-          els.status.textContent = `Loaded ${file.name} — preview uses book palette shades.`;
+          els.status.textContent = `Got it — using colors from ${file.name}. Check the preview on the right.`;
           render();
         } catch {
           importedPalette = null;
-          els.status.textContent = "That file did not parse. Try palette-XX.json from your zip.";
+          els.status.textContent = "Couldn’t read that file. Try one named palette-01.json from your book folder.";
         }
       });
 
@@ -871,9 +914,9 @@
           URL.revokeObjectURL(a.href);
           try {
             await navigator.clipboard.writeText(cssText());
-            els.status.textContent = "Downloaded tokens.css and copied to clipboard.";
+            els.status.textContent = "Saved tokens.css and copied the same text to your clipboard.";
           } catch {
-            els.status.textContent = "Downloaded tokens.css.";
+            els.status.textContent = "Saved tokens.css to your Downloads folder.";
           }
           return;
         }

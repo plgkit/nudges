@@ -1,21 +1,27 @@
 # RUI Studio
 
-**Offline** design-token wizard for coders. Double-click `index.html` — no install, no account.
+One file you open in a browser. No install. No account.
 
-Not affiliated with *Refactoring UI* or Tailwind Labs. Tips in the app paraphrase common ideas from the book; the book itself is not included in this repo.
+It walks you through colors and fonts for a simple app screen, then gives you CSS to paste into your project.
 
-## How to use (60 seconds)
+## Open it
 
-1. Open **`index.html`** in Chrome, Edge, or Firefox.
-2. Click **Start**, then follow **Steps 1–5** (personality → brand color → type → spacing → export).
-3. **Download CSS** on the last step. Paste `:root { ... }` into your app (e.g. `spec/examples/demo/src/styles.css`).
+1. Copy `index.html` to your Desktop (or anywhere).
+2. Double-click it (Chrome, Edge, or Firefox).
 
-**Defaults** match the warm plgkit nudges demo (cream page, muted orange bar).
+## What to do inside
 
-### Optional: your Refactoring UI palette JSON
+1. Click **Start**.
+2. Keep clicking **Continue** through the steps.
+3. On the last step, click **Download CSS**.
+4. Open your app’s `styles.css`, paste the downloaded text at the **top**, save, reload your app.
 
-If you own the book bundle, unzip **Color Palettes JSON** and on **Step 2** load any `palette-XX.json`. Parsing happens in your browser only; nothing is uploaded.
+Steps 3 and 4 are optional — the defaults are already set.
 
-## One file on your desktop
+## Book palette files (optional)
 
-Copy only `index.html` — it has everything embedded. Or copy the whole `rui-studio` folder.
+If you bought *Refactoring UI*, you can load a `palette-XX.json` file on step 2. Nothing is uploaded; it stays on your computer.
+
+## Note
+
+This tool is not from the Refactoring UI authors. The short “Good habit” notes are plain-language reminders inspired by common ideas from the book.
