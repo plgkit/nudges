@@ -64,19 +64,20 @@ const overlayStyle = {
   alignItems: "center",
   justifyContent: "center",
   boxSizing: "border-box",
-  padding: "1.25rem",
-  background: "rgb(29 26 22 / 55%)",
+  padding: "var(--space-5)",
+  background: "color-mix(in srgb, var(--color-neutral-900) 55%, transparent)",
 } as const;
 
 const dialogStyle = {
-  width: "min(40rem, 100%)",
-  maxHeight: "calc(100vh - 2.5rem)",
+  width: "min(640px, 100%)",
+  maxHeight: "calc(100vh - var(--space-8))",
   overflow: "auto",
   boxSizing: "border-box",
-  background: "#fff",
-  border: "1px solid #e3dcd0",
-  borderRadius: 12,
-  padding: "1rem 1.1rem 1.15rem",
+  background: "var(--color-neutral-50)",
+  border: "1px solid var(--color-neutral-200)",
+  borderRadius: "var(--radius-lg)",
+  boxShadow: "var(--shadow-md)",
+  padding: "var(--space-5)",
 } as const;
 
 /** Matches the get-started onboarding sample message. */
