@@ -4,7 +4,7 @@ active: # UTC. A date with no time is midnight UTC. Missing from = active immedi
   from: "2026-10-30"
   to: "2050-01-28"
 priority: 5 # Optional, default 100. Lower numbers win. Ties break by filename, which with the timestamp prefix means the older message wins.
-max_impressions: 5 # Count of impression(nudge_id, event) calls for this user_id. decide() only reads it.
+max_impressions: 500000 # Count of impression(nudge_id, event) calls for this user_id. decide() only reads it.
 audience: # Optional. Omitted entirely means everyone matches. Omitted require_all or require_one_of passes; omitted exclude excludes no one. Functions live in plgkit/nudges/audiences.py (Go: plgkit/nudges/audiences.go, TypeScript: plgkit/nudges/audiences.ts)
   require_all: [is_human, is_adult]
   require_one_of: [is_usa_resident, is_uk_resident]
