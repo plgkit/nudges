@@ -202,7 +202,7 @@ button {
 }
 
 .wrap {
-  max-width: 640px;
+  max-width: 840px;
   margin: 0 auto;
   padding: var(--space-5) var(--space-5) var(--space-8);
 }
@@ -234,20 +234,38 @@ h1 + p,
   margin-bottom: var(--space-5);
 }
 
-/* Home banner (matches the product mock) */
+/* Home banner — single-row layout on desktop */
 .nudge-banner {
-  position: relative;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
   background: var(--color-neutral-50);
   border: 1px solid var(--color-neutral-200);
   border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  padding: var(--space-4) var(--space-5);
   box-shadow: var(--shadow-sm);
   font-family: var(--font-ui);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: var(--weight-ui);
   line-height: var(--leading-body);
   color: var(--color-neutral-900);
+}
+
+.nudge-banner__main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+}
+
+.nudge-banner__copy {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1;
 }
 
 .page-banner-slot .nudge-banner img,
@@ -256,27 +274,35 @@ header .nudge-banner img {
 }
 
 .nudge-banner h2 {
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
+  margin: 0;
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
   font-weight: var(--weight-display);
-  letter-spacing: var(--track-display);
-  line-height: 1.25;
-  margin: 0 0 var(--space-3);
-  padding-right: var(--space-6);
+  letter-spacing: normal;
+  line-height: var(--leading-body);
+  color: var(--color-neutral-900);
 }
 
 .nudge-banner p {
-  font-size: var(--text-base);
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
   line-height: var(--leading-body);
-  margin: 0 0 var(--space-5);
-  max-width: 576px;
   color: var(--color-neutral-700);
 }
 
+.nudge-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
 .nudge-banner__close {
-  position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
   margin: 0;
   padding: var(--space-1) var(--space-2);
   border: 0;
@@ -284,20 +310,21 @@ header .nudge-banner img {
   color: var(--color-neutral-700);
   cursor: pointer;
   font-family: var(--font-ui);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   line-height: 1;
 }
 
-.nudge-banner a {
+.nudge-banner__actions a {
   display: inline-block;
   background: var(--color-primary-600);
   color: var(--color-primary-50);
   text-decoration: none;
   border-radius: var(--radius-sm);
-  padding: var(--space-3) var(--space-5);
+  padding: var(--space-2) var(--space-4);
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: var(--weight-display);
+  white-space: nowrap;
 }
 
 .nudge-modal {
