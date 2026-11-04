@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>RUI Studio — local design tokens</title>
+    <title>RUI Studio</title>
     <style>
       * {
         box-sizing: border-box;
@@ -12,182 +12,211 @@
       body {
         margin: 0;
         font-family: system-ui, -apple-system, sans-serif;
-        font-size: 14px;
-        line-height: 1.45;
-        color: #1a1a1a;
-        background: #ececec;
+        font-size: 15px;
+        line-height: 1.5;
+        color: #111;
+        background: #e8e8e8;
         height: 100vh;
         overflow: hidden;
       }
 
       .app {
         display: grid;
-        grid-template-columns: min(22rem, 38vw) 1fr;
+        grid-template-columns: min(26rem, 42vw) 1fr;
         height: 100vh;
       }
 
       .panel {
-        background: #f7f7f7;
-        border-right: 1px solid #d4d4d4;
+        background: #fafafa;
+        border-right: 1px solid #ccc;
         overflow: auto;
-        padding: 1rem 1rem 2rem;
+        padding: 1.25rem 1.25rem 2rem;
+        display: flex;
+        flex-direction: column;
       }
 
       .panel h1 {
-        font-size: 1.05rem;
-        margin: 0 0 0.25rem;
+        font-size: 1.15rem;
+        margin: 0 0 0.35rem;
       }
 
-      .panel .sub {
-        margin: 0 0 1rem;
+      .progress {
+        font-size: 0.8rem;
+        font-weight: 700;
         color: #555;
-        font-size: 0.82rem;
+        margin-bottom: 0.5rem;
       }
 
-      .tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        margin-bottom: 1rem;
+      .step-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem;
       }
 
-      .tabs button {
-        border: 1px solid #ccc;
+      .step-body {
+        color: #333;
+        font-size: 0.92rem;
+        margin: 0 0 1rem;
+      }
+
+      .book-tip {
         background: #fff;
-        border-radius: 999px;
-        padding: 0.3rem 0.65rem;
-        font-size: 0.78rem;
-        cursor: pointer;
+        border-left: 4px solid #c48855;
+        padding: 0.65rem 0.75rem;
+        margin: 0 0 1rem;
+        font-size: 0.85rem;
+        color: #444;
       }
 
-      .tabs button[aria-selected="true"] {
-        background: #1a1a1a;
-        color: #fff;
-        border-color: #1a1a1a;
+      .book-tip strong {
+        display: block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #888;
+        margin-bottom: 0.25rem;
       }
 
-      .section {
+      .wizard-step {
         display: none;
+        flex: 1;
       }
 
-      .section[data-active="true"] {
+      .wizard-step[data-active="true"] {
         display: block;
       }
 
-      fieldset {
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        margin: 0 0 0.85rem;
-        padding: 0.65rem 0.75rem 0.75rem;
-        background: #fff;
+      .choice-grid {
+        display: grid;
+        gap: 0.55rem;
+        margin-bottom: 1rem;
       }
 
-      legend {
-        font-weight: 600;
-        font-size: 0.78rem;
-        padding: 0 0.25rem;
+      .choice {
+        text-align: left;
+        border: 2px solid #ddd;
+        background: #fff;
+        border-radius: 12px;
+        padding: 0.75rem 0.85rem;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .choice:hover {
+        border-color: #999;
+      }
+
+      .choice[aria-pressed="true"] {
+        border-color: #111;
+        box-shadow: 0 0 0 1px #111;
+      }
+
+      .choice .name {
+        font-weight: 700;
+        display: block;
+      }
+
+      .choice .desc {
+        font-size: 0.82rem;
+        color: #555;
+        margin-top: 0.15rem;
       }
 
       label {
         display: block;
-        font-size: 0.78rem;
-        color: #444;
-        margin: 0.5rem 0 0.2rem;
-      }
-
-      label:first-of-type {
-        margin-top: 0;
-      }
-
-      input[type="range"] {
-        width: 100%;
-      }
-
-      select,
-      input[type="number"],
-      input[type="text"] {
-        width: 100%;
-        padding: 0.35rem 0.45rem;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin: 0.75rem 0 0.35rem;
       }
 
       input[type="color"] {
         width: 100%;
-        height: 2.25rem;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        padding: 0.15rem;
+        height: 3rem;
+        border: 2px solid #ccc;
+        border-radius: 10px;
+        padding: 0.2rem;
         cursor: pointer;
       }
 
-      .row {
+      input[type="file"] {
+        font-size: 0.82rem;
+        margin-top: 0.35rem;
+      }
+
+      details {
+        margin: 0.75rem 0;
+        font-size: 0.82rem;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: #555;
+      }
+
+      select,
+      input[type="number"] {
+        width: 100%;
+        padding: 0.45rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font: inherit;
+      }
+
+      .nav-row {
         display: flex;
         gap: 0.5rem;
-        align-items: center;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid #ddd;
       }
 
-      .row > * {
+      .nav-row button {
         flex: 1;
-      }
-
-      .swatches {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.35rem;
-        margin-top: 0.5rem;
-      }
-
-      .swatch {
-        border-radius: 8px;
-        padding: 0.35rem 0.45rem;
-        font-size: 0.68rem;
-        border: 1px solid rgb(0 0 0 / 8%);
-        min-height: 2.4rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-      }
-
-      .swatch code {
-        font-size: 0.62rem;
-        opacity: 0.85;
-      }
-
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.45rem;
-        margin-top: 0.75rem;
-        position: sticky;
-        bottom: 0;
-        background: linear-gradient(transparent, #f7f7f7 24%);
-        padding-top: 0.75rem;
-      }
-
-      .actions button {
-        flex: 1;
-        min-width: 7rem;
-        padding: 0.5rem 0.65rem;
-        border-radius: 8px;
+        padding: 0.65rem 0.75rem;
+        border-radius: 10px;
         border: 1px solid #bbb;
         background: #fff;
         font-weight: 600;
         cursor: pointer;
-        font-size: 0.78rem;
+        font-size: 0.9rem;
       }
 
-      .actions button.primary {
-        background: #1a1a1a;
+      .nav-row button.primary {
+        background: #111;
         color: #fff;
-        border-color: #1a1a1a;
+        border-color: #111;
+      }
+
+      .nav-row button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .status {
+        font-size: 0.78rem;
+        color: #666;
+        min-height: 1.2rem;
+        margin-top: 0.5rem;
+      }
+
+      .export-box {
+        background: #111;
+        color: #eee;
+        border-radius: 10px;
+        padding: 0.75rem;
+        font-family: ui-monospace, monospace;
+        font-size: 0.68rem;
+        max-height: 8rem;
+        overflow: auto;
+        white-space: pre;
+        margin-bottom: 0.75rem;
       }
 
       .preview-wrap {
         overflow: auto;
         padding: 1.25rem;
-        background: #ddd;
+        background: #ccc;
       }
 
       .preview-frame {
@@ -195,29 +224,11 @@
         margin: 0 auto;
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 8px 32px rgb(0 0 0 / 12%);
+        box-shadow: 0 12px 40px rgb(0 0 0 / 15%);
       }
 
-      .rules-list {
-        margin: 0;
-        padding-left: 1.1rem;
-        font-size: 0.82rem;
-        color: #333;
-      }
-
-      .rules-list li {
-        margin-bottom: 0.45rem;
-      }
-
-      .hint {
-        font-size: 0.72rem;
-        color: #666;
-        margin-top: 0.35rem;
-      }
-
-      /* Preview uses token variables on .preview-root */
       .preview-root {
-        min-height: 28rem;
+        min-height: 30rem;
         font-family: var(--font-display);
         color: var(--color-text);
         background: var(--color-bg);
@@ -291,7 +302,7 @@
         background: var(--color-surface);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-lg);
-        padding: var(--space-6) var(--space-6) var(--space-5);
+        padding: var(--space-6);
         box-shadow: var(--shadow-sm);
         font-family: var(--font-ui);
         margin-bottom: var(--space-5);
@@ -308,7 +319,6 @@
       .preview-card p {
         margin: 0 0 var(--space-5);
         font-size: var(--text-base);
-        max-width: 36rem;
       }
 
       .preview-card .close {
@@ -318,8 +328,6 @@
         border: 0;
         background: transparent;
         font-size: 1.25rem;
-        line-height: 1;
-        cursor: default;
         color: var(--color-text);
       }
 
@@ -327,7 +335,6 @@
         display: inline-block;
         background: var(--color-cta);
         color: var(--color-cta-text);
-        text-decoration: none;
         border-radius: var(--radius-sm);
         padding: var(--space-2) var(--space-5);
         font-size: var(--text-sm);
@@ -345,18 +352,9 @@
         color: var(--color-text-muted);
         font-family: var(--font-ui);
         font-size: var(--text-base);
-        margin: 0;
       }
 
-      .type-sample {
-        margin-top: 0.5rem;
-        padding: 0.5rem;
-        border: 1px dashed #ddd;
-        border-radius: 8px;
-        background: #fafafa;
-      }
-
-      @media (max-width: 760px) {
+      @media (max-width: 800px) {
         .app {
           grid-template-columns: 1fr;
           grid-template-rows: 1fr 1fr;
@@ -368,104 +366,99 @@
     <div class="app">
       <aside class="panel">
         <h1>RUI Studio</h1>
-        <p class="sub">
-          Offline token lab inspired by <em>Refactoring UI</em> ideas — not affiliated. Edit left, preview right, export CSS.
-        </p>
+        <p class="progress" id="progress">Step 1 of 5</p>
 
-        <div class="tabs" role="tablist">
-          <button type="button" role="tab" data-tab="colors" aria-selected="true">Colors</button>
-          <button type="button" role="tab" data-tab="type" aria-selected="false">Type</button>
-          <button type="button" role="tab" data-tab="space" aria-selected="false">Space</button>
-          <button type="button" role="tab" data-tab="rules" aria-selected="false">Rules</button>
+        <div class="wizard-step" data-step="0" data-active="true">
+          <h2 class="step-title">Start here</h2>
+          <p class="step-body">
+            Five clicks. You pick a vibe and one brand color. We fill in spacing, type, and grays. Preview updates on the
+            right. At the end you download a CSS file for your project.
+          </p>
+          <div class="book-tip">
+            <strong>Refactoring UI · Starting from scratch</strong>
+            Start with a real feature on the page (like the banner card), not abstract layout chrome.
+          </div>
+          <p class="step-body">
+            <strong>Default:</strong> warm cream + muted orange — matches the plgkit nudges demo mock.
+          </p>
         </div>
 
-        <div class="section" data-section="colors" data-active="true">
-          <fieldset>
-            <legend>Brand (pick one color)</legend>
-            <label for="brandColor">Click swatch — we read <strong>Hue</strong> for the system</label>
-            <input type="color" id="brandColor" value="#c48855" />
-            <label for="hueBrand">Brand hue (H): <output id="hueBrandOut">28</output>°</label>
-            <input type="range" id="hueBrand" min="0" max="360" value="28" />
-            <label for="hueNeutral">Neutral hue (warm gray): <output id="hueNeutralOut">35</output>°</label>
-            <input type="range" id="hueNeutral" min="0" max="360" value="35" />
-            <p class="hint">Refactoring UI tip: grays share a hue — don’t use pure gray (S=0) on warm pages.</p>
-          </fieldset>
-          <fieldset>
-            <legend>Semantic colors (auto)</legend>
-            <div class="swatches" id="colorSwatches"></div>
-          </fieldset>
+        <div class="wizard-step" data-step="1">
+          <h2 class="step-title">1. Pick a personality</h2>
+          <p class="step-body">Fonts and corner feel. You can change details later under Advanced.</p>
+          <div class="choice-grid" id="personalityChoices"></div>
+          <div class="book-tip">
+            <strong>Refactoring UI · Choose a personality</strong>
+            Serif headlines feel classic; neutral sans feels plain and lets color do the work.
+          </div>
         </div>
 
-        <div class="section" data-section="type">
-          <fieldset>
-            <legend>Fonts</legend>
-            <label for="fontDisplay">Display (headlines)</label>
-            <select id="fontDisplay">
-              <option value="Georgia, 'Iowan Old Style', serif">Georgia (system serif)</option>
-              <option value="'Palatino Linotype', Palatino, serif">Palatino</option>
-              <option value="ui-serif, Georgia, serif">UI serif</option>
-              <option value="system-ui, sans-serif">System UI (no serif)</option>
-            </select>
-            <label for="fontUi">UI (nav, buttons, labels)</label>
-            <select id="fontUi">
-              <option value="system-ui, -apple-system, sans-serif">System UI</option>
-              <option value="Arial, Helvetica, sans-serif">Arial</option>
-              <option value="Verdana, sans-serif">Verdana</option>
-            </select>
-          </fieldset>
-          <fieldset>
-            <legend>Type scale</legend>
-            <label for="baseSize">Base size (px)</label>
-            <input type="number" id="baseSize" min="14" max="20" value="16" />
-            <label for="scaleRatio">Scale ratio</label>
-            <select id="scaleRatio">
-              <option value="1.125">1.125 — tight (Major second)</option>
-              <option value="1.2" selected>1.2 — balanced</option>
-              <option value="1.25">1.25 — roomy (Major third)</option>
-              <option value="1.333">1.333 — display-heavy</option>
-            </select>
-            <div class="type-sample" id="typeSample"></div>
-            <p class="hint">Use 3–4 sizes in real UI; the scale is your menu, not a checklist.</p>
-          </fieldset>
+        <div class="wizard-step" data-step="2">
+          <h2 class="step-title">2. Pick one brand color</h2>
+          <p class="step-body">Click the square. We build backgrounds, text, and borders from that hue — you don’t set S and L by hand.</p>
+          <label for="brandColor">Brand color</label>
+          <input type="color" id="brandColor" value="#c48855" />
+          <label>Optional: Refactoring UI palette JSON</label>
+          <input type="file" id="paletteFile" accept=".json,application/json" />
+          <p class="step-body" style="font-size: 0.8rem; color: #666">
+            From your download zip: <code>Color Palettes JSON</code> → any <code>palette-XX.json</code>. Stays on your
+            machine; nothing is uploaded.
+          </p>
+          <div class="book-tip">
+            <strong>Refactoring UI · Working with color</strong>
+            Use HSL thinking: one hue family for grays, separate shades for UI — not five random hex codes.
+          </div>
         </div>
 
-        <div class="section" data-section="space">
-          <fieldset>
-            <legend>Spacing grid</legend>
-            <label for="spaceUnit">Base unit (px)</label>
-            <select id="spaceUnit">
-              <option value="4">4px — dense</option>
-              <option value="8" selected>8px — default</option>
-            </select>
-            <label for="radiusSm">Corner radius — small (px)</label>
-            <input type="number" id="radiusSm" min="0" max="24" value="8" />
-            <label for="radiusLg">Corner radius — large (px)</label>
-            <input type="number" id="radiusLg" min="4" max="32" value="14" />
-            <p class="hint">Stick to the grid for padding/margin; avoid random 13px gaps.</p>
-          </fieldset>
+        <div class="wizard-step" data-step="3">
+          <h2 class="step-title">3. Type scale</h2>
+          <p class="step-body">Defaults are fine for most apps: 16px body and a modest scale. Limit how many sizes you use in real UI.</p>
+          <label for="baseSize">Body size (px)</label>
+          <input type="number" id="baseSize" min="15" max="18" value="16" />
+          <label for="scaleRatio">Scale tightness</label>
+          <select id="scaleRatio">
+            <option value="1.125">Compact</option>
+            <option value="1.2" selected>Balanced (default)</option>
+            <option value="1.25">Roomy</option>
+          </select>
+          <div class="book-tip">
+            <strong>Refactoring UI · Designing text</strong>
+            Establish a type scale up front, then pick from it — don’t invent a new size for every line.
+          </div>
         </div>
 
-        <div class="section" data-section="rules">
-          <fieldset>
-            <legend>Decision reminders (ELI5)</legend>
-            <ul class="rules-list">
-              <li><strong>Emphasize by de-emphasizing</strong> — make the hero loud; quiet nav and chrome.</li>
-              <li><strong>Fewer borders</strong> — separate with background color or whitespace first.</li>
-              <li><strong>Limit font sizes</strong> — pick from your scale; don’t invent a new size per line.</li>
-              <li><strong>Labels last</strong> — layout and hierarchy should explain the UI before extra text.</li>
-              <li><strong>One primary action</strong> per card — one filled button; dismiss stays subtle.</li>
-              <li><strong>Don’t gray-out important text</strong> — muted is for hints, not body copy.</li>
-              <li><strong>Start from a real screen</strong> — preview should look like a product, not a spec.</li>
-            </ul>
-          </fieldset>
+        <div class="wizard-step" data-step="4">
+          <h2 class="step-title">4. Spacing</h2>
+          <p class="step-body">8px grid is the default (Refactoring UI spacing system). Padding and gaps should land on these steps.</p>
+          <label for="spaceUnit">Grid</label>
+          <select id="spaceUnit">
+            <option value="8" selected>8px (recommended)</option>
+            <option value="4">4px (dense)</option>
+          </select>
+          <div class="book-tip">
+            <strong>Refactoring UI · Layout and spacing</strong>
+            Start with too much whitespace; tighten later. Avoid ambiguous “is this margin or padding?” gaps.
+          </div>
         </div>
 
-        <div class="actions">
-          <button type="button" class="primary" id="copyCss">Copy CSS</button>
-          <button type="button" id="downloadCss">Download tokens.css</button>
-          <button type="button" id="resetBtn">Reset</button>
+        <div class="wizard-step" data-step="5">
+          <h2 class="step-title">5. Export</h2>
+          <p class="step-body">
+            Download <code>tokens.css</code> and paste the <code>:root</code> block into your app stylesheet (e.g.
+            <code>styles.css</code>).
+          </p>
+          <div class="export-box" id="exportPreview"></div>
+          <div class="book-tip">
+            <strong>Refactoring UI · Hierarchy</strong>
+            Emphasize by de-emphasizing: quiet chrome, one loud primary action per card.
+          </div>
         </div>
-        <p class="hint" id="status" aria-live="polite"></p>
+
+        <div class="nav-row">
+          <button type="button" id="backBtn" disabled>Back</button>
+          <button type="button" class="primary" id="nextBtn">Start</button>
+        </div>
+        <p class="status" id="status" aria-live="polite"></p>
       </aside>
 
       <main class="preview-wrap">
@@ -492,7 +485,7 @@
                 <span class="cta">Join the waitlist</span>
               </article>
               <h1 class="preview-page-title">Home</h1>
-              <p class="preview-muted">Secondary line — hierarchy check (muted, not main copy).</p>
+              <p class="preview-muted">Muted supporting line — not your main paragraph.</p>
             </div>
           </div>
         </div>
@@ -500,29 +493,130 @@
     </div>
 
     <script>
-      const STORAGE_KEY = "rui-studio-v1";
+      const STORAGE_KEY = "rui-studio-v2";
+      const STEPS = 5;
+
+      const PERSONALITIES = {
+        warm: {
+          name: "Warm & classic",
+          desc: "Serif headlines + soft corners — good for the Supersuit-style demo.",
+          fontDisplay: "Georgia, 'Iowan Old Style', serif",
+          fontUi: "system-ui, -apple-system, sans-serif",
+          radiusSm: 8,
+          radiusLg: 14,
+          hueBrand: 28,
+          hueNeutral: 35,
+          brandColor: "#c48855",
+        },
+        calm: {
+          name: "Calm & professional",
+          desc: "All system UI, tighter corners — SaaS / dashboard feel.",
+          fontDisplay: "system-ui, -apple-system, sans-serif",
+          fontUi: "system-ui, -apple-system, sans-serif",
+          radiusSm: 6,
+          radiusLg: 10,
+          hueBrand: 210,
+          hueNeutral: 215,
+          brandColor: "#486581",
+        },
+        playful: {
+          name: "Soft & friendly",
+          desc: "Rounded corners, slightly brighter brand — marketing pages.",
+          fontDisplay: "Verdana, sans-serif",
+          fontUi: "system-ui, -apple-system, sans-serif",
+          radiusSm: 10,
+          radiusLg: 18,
+          hueBrand: 330,
+          hueNeutral: 330,
+          brandColor: "#da4a91",
+        },
+      };
+
+      let step = 0;
+      let state = loadState();
+      let importedPalette = null;
 
       const els = {
+        progress: document.getElementById("progress"),
+        backBtn: document.getElementById("backBtn"),
+        nextBtn: document.getElementById("nextBtn"),
+        status: document.getElementById("status"),
         brandColor: document.getElementById("brandColor"),
-        hueBrand: document.getElementById("hueBrand"),
-        hueNeutral: document.getElementById("hueNeutral"),
-        hueBrandOut: document.getElementById("hueBrandOut"),
-        hueNeutralOut: document.getElementById("hueNeutralOut"),
-        colorSwatches: document.getElementById("colorSwatches"),
-        fontDisplay: document.getElementById("fontDisplay"),
-        fontUi: document.getElementById("fontUi"),
+        paletteFile: document.getElementById("paletteFile"),
         baseSize: document.getElementById("baseSize"),
         scaleRatio: document.getElementById("scaleRatio"),
-        typeSample: document.getElementById("typeSample"),
         spaceUnit: document.getElementById("spaceUnit"),
-        radiusSm: document.getElementById("radiusSm"),
-        radiusLg: document.getElementById("radiusLg"),
         preview: document.getElementById("preview"),
-        status: document.getElementById("status"),
+        exportPreview: document.getElementById("exportPreview"),
+        personalityChoices: document.getElementById("personalityChoices"),
       };
+
+      function defaultState() {
+        return {
+          personality: "warm",
+          hueBrand: 28,
+          hueNeutral: 35,
+          brandColor: "#c48855",
+          fontDisplay: PERSONALITIES.warm.fontDisplay,
+          fontUi: PERSONALITIES.warm.fontUi,
+          baseSize: 16,
+          scaleRatio: 1.2,
+          spaceUnit: 8,
+          radiusSm: 8,
+          radiusLg: 14,
+        };
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) return { ...defaultState(), ...JSON.parse(raw) };
+        } catch {
+          /* ignore */
+        }
+        return defaultState();
+      }
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function applyPersonality(key) {
+        const p = PERSONALITIES[key];
+        if (!p) return;
+        state.personality = key;
+        state.fontDisplay = p.fontDisplay;
+        state.fontUi = p.fontUi;
+        state.radiusSm = p.radiusSm;
+        state.radiusLg = p.radiusLg;
+        if (!importedPalette) {
+          state.hueBrand = p.hueBrand;
+          state.hueNeutral = p.hueNeutral;
+          state.brandColor = p.brandColor;
+          els.brandColor.value = p.brandColor;
+        }
+        renderPersonalityButtons();
+        render();
+      }
+
+      function renderPersonalityButtons() {
+        els.personalityChoices.innerHTML = Object.entries(PERSONALITIES)
+          .map(
+            ([key, p]) =>
+              `<button type="button" class="choice" data-personality="${key}" aria-pressed="${state.personality === key}">
+                <span class="name">${p.name}</span>
+                <span class="desc">${p.desc}</span>
+              </button>`,
+          )
+          .join("");
+        els.personalityChoices.querySelectorAll("[data-personality]").forEach((btn) => {
+          btn.addEventListener("click", () => applyPersonality(btn.dataset.personality));
+        });
+      }
 
       function hexToHsl(hex) {
         const n = hex.replace("#", "");
+        if (n.length !== 6) return { h: 28, s: 50, l: 50 };
         const r = parseInt(n.slice(0, 2), 16) / 255;
         const g = parseInt(n.slice(2, 4), 16) / 255;
         const b = parseInt(n.slice(4, 6), 16) / 255;
@@ -553,48 +647,69 @@
         return `hsl(${h} ${s}% ${l}%)`;
       }
 
-      function readState() {
+      function parseRuiPalette(text) {
+        const stripped = text.replace(/^\s*\/\/.*$/gm, "");
+        return JSON.parse(stripped);
+      }
+
+      function pickScale(obj, prefix) {
+        const keys = Object.keys(obj).filter((k) => k.startsWith(prefix + "-"));
+        if (!keys.length) return null;
+        const get = (n) => obj[`${prefix}-${n}`];
+        return { get, prefix };
+      }
+
+      function findPrimaryScale(obj) {
+        const prefixes = new Set();
+        for (const key of Object.keys(obj)) {
+          const m = key.match(/^([a-z-]+)-\d{3}$/);
+          if (m && !m[1].includes("grey") && !m[1].includes("gray")) prefixes.add(m[1]);
+        }
+        const list = [...prefixes];
+        const primary = list.find((p) => !p.includes("red") && !p.includes("yellow")) || list[0];
+        return primary ? pickScale(obj, primary) : null;
+      }
+
+      function colorsFromImport(obj) {
+        const grey = pickScale(obj, "grey") || pickScale(obj, "gray") || pickScale(obj, "blue-grey");
+        const primary = findPrimaryScale(obj);
+        if (!grey || !primary) return null;
         return {
-          hueBrand: Number(els.hueBrand.value),
-          hueNeutral: Number(els.hueNeutral.value),
-          brandColor: els.brandColor.value,
-          fontDisplay: els.fontDisplay.value,
-          fontUi: els.fontUi.value,
-          baseSize: Number(els.baseSize.value) || 16,
-          scaleRatio: Number(els.scaleRatio.value) || 1.2,
-          spaceUnit: Number(els.spaceUnit.value) || 8,
-          radiusSm: Number(els.radiusSm.value) || 8,
-          radiusLg: Number(els.radiusLg.value) || 14,
+          bg: grey.get("050") || grey.get("100"),
+          surface: "#ffffff",
+          border: grey.get("200"),
+          text: grey.get("900"),
+          textMuted: grey.get("600"),
+          brand: primary.get("500") || primary.get("600"),
+          brandText: grey.get("900"),
+          brandBorder: primary.get("600") || primary.get("500"),
+          cta: grey.get("900"),
+          ctaText: "#ffffff",
         };
       }
 
-      function applyState(state) {
-        els.hueBrand.value = state.hueBrand;
-        els.hueNeutral.value = state.hueNeutral;
-        els.brandColor.value = state.brandColor;
-        els.fontDisplay.value = state.fontDisplay;
-        els.fontUi.value = state.fontUi;
-        els.baseSize.value = state.baseSize;
-        els.scaleRatio.value = String(state.scaleRatio);
-        els.spaceUnit.value = String(state.spaceUnit);
-        els.radiusSm.value = state.radiusSm;
-        els.radiusLg.value = state.radiusLg;
-        render();
+      function colorsFromHsl(state) {
+        const hb = state.hueBrand;
+        const hn = state.hueNeutral;
+        return {
+          bg: hsl(hn, 48, 91),
+          surface: hsl(0, 0, 100),
+          border: hsl(hn, 22, 84),
+          text: hsl(hn, 25, 12),
+          textMuted: hsl(hn, 12, 40),
+          brand: hsl(hb, 45, 58),
+          brandText: hsl(hn, 25, 14),
+          brandBorder: hsl(hb, 40, 52),
+          cta: hsl(hn, 25, 12),
+          ctaText: hsl(0, 0, 100),
+        };
       }
 
       function typeScale(base, ratio) {
-        const steps = {
-          xs: -2,
-          sm: -1,
-          base: 0,
-          lg: 1,
-          xl: 2,
-          "2xl": 3,
-          "3xl": 4,
-        };
+        const steps = { xs: -2, sm: -1, base: 0, lg: 1, xl: 2, "2xl": 3, "3xl": 4 };
         const out = {};
         for (const [name, exp] of Object.entries(steps)) {
-          out[name] = (base * ratio ** exp).toFixed(3);
+          out[name] = (base * ratio ** exp).toFixed(2);
         }
         return out;
       }
@@ -608,35 +723,25 @@
         return out;
       }
 
-      function buildTokens(state) {
-        const hb = state.hueBrand;
-        const hn = state.hueNeutral;
-        const colors = {
-          bg: hsl(hn, 48, 91),
-          surface: hsl(0, 0, 100),
-          border: hsl(hn, 22, 84),
-          text: hsl(hn, 25, 12),
-          textMuted: hsl(hn, 12, 40),
-          brand: hsl(hb, 45, 58),
-          brandText: hsl(hn, 25, 14),
-          brandBorder: hsl(hb, 40, 52),
-          cta: hsl(hn, 25, 12),
-          ctaText: hsl(0, 0, 100),
-        };
+      function buildTokens() {
+        const colors = importedPalette ? colorsFromImport(importedPalette) : colorsFromHsl(state);
+        if (!colors) {
+          importedPalette = null;
+          els.status.textContent = "Could not read that JSON — using generated colors.";
+        }
+        const finalColors = colors || colorsFromHsl(state);
         const ts = typeScale(state.baseSize, state.scaleRatio);
         const sp = spacingScale(state.spaceUnit);
-        return { colors, ts, sp, state };
+        return { colors: finalColors, ts, sp };
       }
 
-      function cssText(tokens) {
-        const { colors, ts, sp, state } = tokens;
-        return `/* Generated by RUI Studio — paste into your app */
-:root {
-  /* Hues (tweak these first) */
+      function cssText() {
+        const { colors, ts, sp } = buildTokens();
+        return `:root {
+  /* RUI Studio — paste into your app stylesheet */
   --hue-brand: ${state.hueBrand};
   --hue-neutral: ${state.hueNeutral};
 
-  /* Colors */
   --color-bg: ${colors.bg};
   --color-surface: ${colors.surface};
   --color-border: ${colors.border};
@@ -648,7 +753,6 @@
   --color-cta: ${colors.cta};
   --color-cta-text: ${colors.ctaText};
 
-  /* Typography */
   --font-display: ${state.fontDisplay};
   --font-ui: ${state.fontUi};
   --text-xs: ${ts.xs}px;
@@ -661,7 +765,6 @@
   --leading-tight: 1.25;
   --leading-body: 1.5;
 
-  /* Spacing (${state.spaceUnit}px grid) */
   --space-0: ${sp[0]}px;
   --space-1: ${sp[1]}px;
   --space-2: ${sp[2]}px;
@@ -673,28 +776,19 @@
   --space-10: ${sp[8]}px;
   --space-12: ${sp[9]}px;
 
-  /* Radius & shadow */
   --radius-sm: ${state.radiusSm}px;
   --radius-lg: ${state.radiusLg}px;
   --radius-full: 999px;
-  --shadow-sm: 0 1px 2px hsl(${state.hueNeutral} 25% 12% / 6%);
-}
-`;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 6%);
+}`;
       }
 
-      function applyPreview(tokens) {
-        const { colors, ts, sp, state } = tokens;
+      function applyPreview() {
+        const { colors, ts, sp } = buildTokens();
         const root = els.preview;
-        root.style.setProperty("--color-bg", colors.bg);
-        root.style.setProperty("--color-surface", colors.surface);
-        root.style.setProperty("--color-border", colors.border);
-        root.style.setProperty("--color-text", colors.text);
-        root.style.setProperty("--color-text-muted", colors.textMuted);
-        root.style.setProperty("--color-brand", colors.brand);
-        root.style.setProperty("--color-brand-text", colors.brandText);
-        root.style.setProperty("--color-brand-border", colors.brandBorder);
-        root.style.setProperty("--color-cta", colors.cta);
-        root.style.setProperty("--color-cta-text", colors.ctaText);
+        for (const [k, v] of Object.entries(colors)) {
+          root.style.setProperty(`--color-${k.replace(/([A-Z])/g, (m) => `-${m.toLowerCase()}`)}`, v);
+        }
         root.style.setProperty("--font-display", state.fontDisplay);
         root.style.setProperty("--font-ui", state.fontUi);
         for (const [k, v] of Object.entries(ts)) {
@@ -706,122 +800,90 @@
         root.style.setProperty("--radius-sm", `${state.radiusSm}px`);
         root.style.setProperty("--radius-lg", `${state.radiusLg}px`);
         root.style.setProperty("--radius-full", "999px");
-        root.style.setProperty("--shadow-sm", `0 1px 2px hsl(${state.hueNeutral} 25% 12% / 6%)`);
+        root.style.setProperty("--shadow-sm", "0 1px 2px rgb(0 0 0 / 6%)");
         root.style.setProperty("--leading-tight", "1.25");
         root.style.setProperty("--leading-body", "1.5");
+        els.exportPreview.textContent = cssText();
       }
-
-      function renderSwatches(colors) {
-        const entries = [
-          ["Background", "--color-bg", colors.bg],
-          ["Surface", "--color-surface", colors.surface],
-          ["Brand bar", "--color-brand", colors.brand],
-          ["Text", "--color-text", colors.text],
-          ["Muted", "--color-text-muted", colors.textMuted],
-          ["Border", "--color-border", colors.border],
-        ];
-        els.colorSwatches.innerHTML = entries
-          .map(
-            ([label, name, value]) =>
-              `<div class="swatch" style="background:${value}"><strong>${label}</strong><code>${name}</code></div>`,
-          )
-          .join("");
-      }
-
-      function renderTypeSample(ts) {
-        els.typeSample.innerHTML = `
-          <div style="font-size:${ts["3xl"]}px;font-weight:700;line-height:1.2">Title ${ts["3xl"]}px</div>
-          <div style="font-size:${ts.xl}px;font-weight:700;margin-top:0.35rem">Card ${ts.xl}px</div>
-          <div style="font-size:${ts.base}px;margin-top:0.35rem">Body ${ts.base}px</div>
-          <div style="font-size:${ts.sm}px;color:#666;margin-top:0.35rem">Small ${ts.sm}px</div>`;
-      }
-
-      let latestCss = "";
 
       function render() {
-        const state = readState();
-        els.hueBrandOut.textContent = String(state.hueBrand);
-        els.hueNeutralOut.textContent = String(state.hueNeutral);
-        const tokens = buildTokens(state);
-        applyPreview(tokens);
-        renderSwatches(tokens.colors);
-        renderTypeSample(tokens.ts);
-        latestCss = cssText(tokens);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        els.brandColor.value = state.brandColor;
+        els.baseSize.value = state.baseSize;
+        els.scaleRatio.value = String(state.scaleRatio);
+        els.spaceUnit.value = String(state.spaceUnit);
+        applyPreview();
+        saveState();
       }
 
-      document.querySelectorAll(".tabs button").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", "false"));
-          btn.setAttribute("aria-selected", "true");
-          const tab = btn.dataset.tab;
-          document.querySelectorAll(".section").forEach((sec) => {
-            sec.dataset.active = sec.dataset.section === tab ? "true" : "false";
-          });
+      function showStep(n) {
+        step = n;
+        document.querySelectorAll(".wizard-step").forEach((el) => {
+          el.dataset.active = el.dataset.step === String(n) ? "true" : "false";
         });
-      });
+        els.progress.textContent = n === 0 ? "Welcome" : `Step ${n} of ${STEPS}`;
+        els.backBtn.disabled = n === 0;
+        if (n === 0) els.nextBtn.textContent = "Start";
+        else if (n === STEPS) els.nextBtn.textContent = "Download CSS";
+        else els.nextBtn.textContent = "Continue";
+      }
 
       els.brandColor.addEventListener("input", () => {
-        const { h } = hexToHsl(els.brandColor.value);
-        els.hueBrand.value = h;
-        const neutral = (h + 7) % 360;
-        els.hueNeutral.value = neutral;
+        importedPalette = null;
+        state.brandColor = els.brandColor.value;
+        const { h } = hexToHsl(state.brandColor);
+        state.hueBrand = h;
+        state.hueNeutral = (h + 7) % 360;
         render();
       });
 
-      ["hueBrand", "hueNeutral", "fontDisplay", "fontUi", "baseSize", "scaleRatio", "spaceUnit", "radiusSm", "radiusLg"].forEach(
-        (id) => {
-          document.getElementById(id).addEventListener("input", render);
-          document.getElementById(id).addEventListener("change", render);
-        },
-      );
-
-      document.getElementById("copyCss").addEventListener("click", async () => {
+      els.paletteFile.addEventListener("change", async () => {
+        const file = els.paletteFile.files?.[0];
+        if (!file) return;
         try {
-          await navigator.clipboard.writeText(latestCss);
-          els.status.textContent = "Copied tokens.css to clipboard.";
-        } catch {
-          els.status.textContent = "Copy failed — use Download instead.";
-        }
-      });
-
-      document.getElementById("downloadCss").addEventListener("click", () => {
-        const blob = new Blob([latestCss], { type: "text/css" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "tokens.css";
-        a.click();
-        URL.revokeObjectURL(a.href);
-        els.status.textContent = "Downloaded tokens.css";
-      });
-
-      document.getElementById("resetBtn").addEventListener("click", () => {
-        localStorage.removeItem(STORAGE_KEY);
-        applyState({
-          hueBrand: 28,
-          hueNeutral: 35,
-          brandColor: "#c48855",
-          fontDisplay: "Georgia, 'Iowan Old Style', serif",
-          fontUi: "system-ui, -apple-system, sans-serif",
-          baseSize: 16,
-          scaleRatio: 1.2,
-          spaceUnit: 8,
-          radiusSm: 8,
-          radiusLg: 14,
-        });
-        els.status.textContent = "Reset to defaults.";
-      });
-
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          applyState(JSON.parse(saved));
-        } catch {
+          const text = await file.text();
+          importedPalette = parseRuiPalette(text);
+          els.status.textContent = `Loaded ${file.name} — preview uses book palette shades.`;
           render();
+        } catch {
+          importedPalette = null;
+          els.status.textContent = "That file did not parse. Try palette-XX.json from your zip.";
         }
-      } else {
-        render();
-      }
+      });
+
+      ["baseSize", "scaleRatio", "spaceUnit"].forEach((id) => {
+        document.getElementById(id).addEventListener("change", () => {
+          state.baseSize = Number(els.baseSize.value) || 16;
+          state.scaleRatio = Number(els.scaleRatio.value) || 1.2;
+          state.spaceUnit = Number(els.spaceUnit.value) || 8;
+          render();
+        });
+      });
+
+      els.backBtn.addEventListener("click", () => showStep(Math.max(0, step - 1)));
+
+      els.nextBtn.addEventListener("click", async () => {
+        if (step === STEPS) {
+          const blob = new Blob([cssText()], { type: "text/css" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "tokens.css";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          try {
+            await navigator.clipboard.writeText(cssText());
+            els.status.textContent = "Downloaded tokens.css and copied to clipboard.";
+          } catch {
+            els.status.textContent = "Downloaded tokens.css.";
+          }
+          return;
+        }
+        if (step === 0) applyPersonality(state.personality);
+        showStep(Math.min(STEPS, step + 1));
+      });
+
+      renderPersonalityButtons();
+      applyPersonality(state.personality || "warm");
+      showStep(0);
     </script>
   </body>
 </html>

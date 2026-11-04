@@ -1,22 +1,21 @@
 # RUI Studio
 
-Small **offline** design-token lab for coders. One HTML file — no install, no account.
+**Offline** design-token wizard for coders. Double-click `index.html` — no install, no account.
 
-Inspired by ideas from *Refactoring UI* (not affiliated with the book or authors).
+Not affiliated with *Refactoring UI* or Tailwind Labs. Tips in the app paraphrase common ideas from the book; the book itself is not included in this repo.
 
-## Use it
+## How to use (60 seconds)
 
-1. Download this folder (or clone the repo).
-2. Double-click **`index.html`** (or drag it into Chrome, Firefox, or Edge).
-3. Tweak **Colors**, **Type**, and **Space** on the left; preview updates on the right.
-4. **Copy CSS** or **Download tokens.css** and paste `:root` into your app (e.g. `spec/examples/demo/src/styles.css`).
+1. Open **`index.html`** in Chrome, Edge, or Firefox.
+2. Click **Start**, then follow **Steps 1–5** (personality → brand color → type → spacing → export).
+3. **Download CSS** on the last step. Paste `:root { ... }` into your app (e.g. `spec/examples/demo/src/styles.css`).
 
-Settings are saved in your browser (`localStorage`).
+**Defaults** match the warm plgkit nudges demo (cream page, muted orange bar).
 
-## Files
+### Optional: your Refactoring UI palette JSON
 
-| File | Purpose |
-| --- | --- |
-| `index.html` | The whole app (styles + script embedded) |
+If you own the book bundle, unzip **Color Palettes JSON** and on **Step 2** load any `palette-XX.json`. Parsing happens in your browser only; nothing is uploaded.
 
-You can email or zip **only `index.html`** if you want a single file on your desktop.
+## One file on your desktop
+
+Copy only `index.html` — it has everything embedded. Or copy the whole `rui-studio` folder.
