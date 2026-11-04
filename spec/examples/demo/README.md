@@ -6,7 +6,7 @@ You do not set a database address. Events go in `plgkit_events.sqlite` in this f
 
 ## Run everything
 
-From the **repo root** (once: `npm install --prefix spec/examples/demo`):
+From **this folder** (`spec/examples/demo`; once: `npm install`):
 
 ```
 script/server

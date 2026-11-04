@@ -18,7 +18,7 @@ Read this before changing this repo, especially on Cloud Agent runs.
 ## Demos and verification
 
 - Prefer **fast checks** (unit tests, short commands). Do not leave **long-running** demo servers (`script/server`, Vite, backends) running in the background unless the task is to verify the demo end-to-end.
-- **`script/server`** is the supported way to run the React demo (repo root). Default backend is Python; `--backend go` or `--backend node` when requested.
+- **`script/server`** is the supported way to run the React demo (from `spec/examples/demo`). Default backend is Python; `--backend go` or `--backend node` when requested.
 - **`plgkit undismiss`** is **dev-only**: it deletes dismiss and impression rows for that user and nudge. Not for production.
 
 ## Pull requests
