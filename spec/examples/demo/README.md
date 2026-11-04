@@ -34,7 +34,7 @@ The TypeScript backend reads sample messages with the `yaml` package from this f
 
 ## What to click
 
-The top bar says who is signed in. **user_one** is orange. **user_two** is blue. Pick a name to switch. The server remembers that person in a cookie. The page does not send the user id.
+The top bar has **Home** / **Get started**. On the right, stacked avatars show user **1** and **2** — hover to peek at the other, click the back one to switch. The server remembers that person in a cookie. The page does not send the user id.
 
 Home shows the banner. Get started shows the onboarding window. Press **Close** on each. Reload: they stay hidden for this person. Switch to the other person: both show again.
 
