@@ -1,10 +1,29 @@
 # Nudges
 
-Small banners and modals in named slots on your site. You pick **what** to show in Python, TypeScript, or Go. React draws it. Use a React front end, or inline React on a page those servers send.
+**In-product advertising for your own product.**
+
+Banners and short tours in slots you name. A few messages want the same spot. Nudges ranks them, remembers who already saw them, and stays quiet after dismiss.
+
+Python, TypeScript, or Go picks the winner. React draws it, in a React app or [inlined](spec/renderers.md#inline-react) on a page those servers already send.
 
 ![Home page with a dismissible banner above the sub-suit dashboard](docs/home.png)
 
-## Try it
+## The small ad server
+
+These are the jobs a homemade banner system grows into. They ship here, the same way in every language.
+
+- **Priority.** Lower number wins. Tie goes to the older message. Forgot a number? It sorts as 100.
+- **Inventory.** The page has a cap. Each slot has a cap. When the page is full, the rest stay off it, even if a later slot still had room.
+- **Memory.** Dismiss sticks for that person, or for one org if you scope it that way. A view counts when it is actually on screen, once each time you ask. Drawing it again does not spend another view.
+- **Audience.** Everyone, unless you say otherwise. Your functions can require all, require one, or exclude. An unknown name skips the message.
+- **Schedule.** A UTC window on the message. Turn it on and off without touching the component.
+- **The record.** Impressions, clicks, and dismisses go to SQLite or Postgres. The browser does not send the user id. Your session does.
+
+A bad message is skipped. The page stays up.
+
+## Try the supersuit
+
+The sample product sells supersuits. The banner and the tour are ordinary nudges.
 
 From `spec/examples/demo`:
 
@@ -13,55 +32,23 @@ npm install
 script/server
 ```
 
-Open the URL Vite prints. Switch users in the top bar. Home has a banner you can close. Get started is a short tour. The last slide dismisses it.
+Open the URL Vite prints. Close the banner, finish the tour, reload. Switch users in the top bar. The other person still sees both.
 
 Other backends: `script/server --backend go` or `script/server --backend node`.
 
-Details: [spec/examples/demo/README.md](spec/examples/demo/README.md).
+[What to click](spec/examples/demo/README.md).
 
-## What happens on a page
-
-```
-  Your app                         plgkit_events (SQLite or Postgres)
-  ─────────                        ─────────────────────────────────
-  decide("home", ctx)  ──read──►   impressions, clicks, dismisses
-        │
-        ▼
-  [ { id, surface, component, render_props }, ... ]
-        │
-        ▼
-  React NudgeSurface("main-top")  ──POST──►  handle_event (impression / click / dismiss)
-```
-
-Your backend returns one list for the page. Each slot draws the rows for its surface.
-
-```json
-[
-  {
-    "id": "20261030183743-home-supersuit-launch-banner",
-    "surface": "main-top",
-    "component": "Banner",
-    "render_props": { "title": "…", "dismissible": true }
-  }
-]
-```
-
-The browser POSTs events. It does **not** send `user_id`. Your session supplies that.
-
-## Use it in your app
-
-Copy the sample:
+## Add a slot
 
 ```
-your-app/
-  plgkit/nudges/
-    config.yml
-    messages/*.yml
-    audiences.py    # or audiences.go / audiences.ts
+your-app/plgkit/nudges/
+  config.yml        # how many messages a page may show
+  messages/*.yml    # one message per file
+  audiences.py      # or audiences.go / audiences.ts
 ```
 
-1. Leave `PLGKIT_DATABASE_URL` unset to use a local SQLite file, or point it at Postgres. Run `plgkit migrate` once. From this repo, Python is `python -m plgkit migrate` in `packages/python`.
-2. Mount one events route. Pass the signed-in user from the session.
+1. `plgkit migrate` once. No `PLGKIT_DATABASE_URL` means a local SQLite file. Point it at Postgres when you want that. From this repo: `python -m plgkit migrate` in `packages/python`.
+2. One events route. The signed-in user comes from the session.
 
 ```python
 from plgkit import handle_event
@@ -73,7 +60,7 @@ def nudges_events():
     return ("", handle_event(request.get_json(silent=True), session.get("user_id"), verify))
 ```
 
-3. On the page, ask your backend for the list and draw a slot.
+3. Ask once for the page, then draw the slot.
 
 ```jsx
 const decide = (location, context) => yourBackend.decide(location, context);
@@ -89,32 +76,29 @@ const decide = (location, context) => yourBackend.decide(location, context);
 </NudgeProvider>
 ```
 
-A React front end uses that provider in the page tree. A Python, Go, or TypeScript page inlines the same provider: one div, plus one React file. Steps: [Inline React](spec/renderers.md#inline-react).
+Go and TypeScript routes, message fields, and the tour: [spec/examples/README.md](spec/examples/README.md).
 
-Go and TypeScript handlers, and the onboarding modal slot: [spec/examples/README.md](spec/examples/README.md).
-
-## Repo map
+## Map
 
 | Path | What |
 | --- | --- |
-| [packages/python](packages/python), [packages/node](packages/node), [packages/go](packages/go) | `decide()`, `handle_event` / `HandleEvent`, `plgkit migrate` |
-| [packages/react](packages/react) | `NudgeProvider`, `NudgeSurface`, sample `Banner` / `OnboardingModal` |
-| [spec/examples](spec/examples) | Sample config, messages, audiences |
-| [spec/examples/demo](spec/examples/demo) | Browser demo + backends; run `script/server` from this folder |
-| [core/migrations](core/migrations) | SQL schema (copied into each language package) |
+| [packages/python](packages/python), [packages/node](packages/node), [packages/go](packages/go) | Pick the message, save the event, migrate |
+| [packages/react](packages/react) | The slot, plus sample `Banner` and `OnboardingModal` |
+| [spec/examples](spec/examples) | Sample messages, audiences, and config |
+| [spec/examples/demo](spec/examples/demo) | The supersuit, three backends |
+| [spec/renderers.md](spec/renderers.md) | React, and inline React |
+| [core/migrations](core/migrations) | The SQL |
 
-Renderer notes: [spec/renderers.md](spec/renderers.md).
+## Local do-over
 
-## Dev-only reset
-
-Closed a nudge and want it back locally?
+Closed one and want it back on your machine?
 
 ```bash
 plgkit undismiss <nudge_id> --user <user_id>
 ```
 
-Deletes that user’s dismiss and impression rows for the nudge. Not for production.
+Dev only. It deletes that person's dismiss and impression rows for that one nudge.
 
 ## Agents
 
-See [AGENTS.md](AGENTS.md) if you use Cursor Cloud Agents on this repo.
+[AGENTS.md](AGENTS.md) if you use Cursor Cloud Agents on this repo.
