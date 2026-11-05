@@ -28,10 +28,10 @@ Use `audiences.go` or `audiences.ts` instead of `audiences.py` if your app is Go
 
 1. You write a message file.
 2. Your backend calls `decide()` and gets back what to show.
-3. The renderer shows that component.
+3. React shows that component. Use a React front end, or [inline React](../renderers.md#inline-react) on a Python, Go, or TypeScript page.
 4. Clicks and dismisses are sent with POST to your endpoint.
 
-The React renderer is [`packages/react`](../../packages/react/README.md). It does not live in this folder. You pass a `decide` function that calls your backend and returns the list. The provider calls that function once for the page. Each slot then draws its own messages. `Banner` and `OnboardingModal` from that package match the two sample messages. To see that in the browser, run the [demo](demo/README.md).
+The React package is [`packages/react`](../../packages/react/README.md). It does not live in this folder. You pass a `decide` function that calls your backend and returns the list. The provider calls that function once for the page. Each slot then draws its own messages. `Banner` and `OnboardingModal` from that package match the two sample messages. To see that in the browser, run the [demo](demo/README.md).
 
 ```jsx
 const decide = (location, context) => yourBackend.decide(location, context);
@@ -124,5 +124,7 @@ The onboarding modal is location `get-started`, surface `modal`, component `Onbo
   </main>
 </NudgeProvider>
 ```
+
+A page served by Python, Go, or TypeScript uses the same provider. Put a div on the slot and load one React file. The file, the script tag, and the decide route are in [Inline React](../renderers.md#inline-react).
 
 Details: [messages/README.md](messages/README.md) and [renderers](../renderers.md).

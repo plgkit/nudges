@@ -90,7 +90,7 @@ Result: `[A, B]`.
 
 ## Renderers
 
-`component` is a universal name, never a framework path. Renderers are separate packages. The contract, including the registry, fail-closed rendering, and the `useNudgeTracking` helper, is in [spec/renderers.md](../../renderers.md).
+`component` is a universal name, never a framework path. React draws it. Use a React front end, or inline React on a Python, Go, or TypeScript page. The contract, including the registry, fail-closed rendering, and `useNudgeTracking`, is in [spec/renderers.md](../../renderers.md).
 
 ## App layout
 
@@ -113,7 +113,7 @@ Invalid or missing required fields fail closed. The message is skipped and never
 | --- | --- | --- | --- | --- |
 | `location` | Yes | — | Engine | Missing = fail closed: the message is never returned or rendered. Argument to `decide(location, ctx)`. Not on each result item. Cap is `locations.<name>.max` in config; unlisted locations default to 1. Examples: `home`, `get-started`. |
 | `surface` | Yes | — | Engine | Missing = fail closed. On each result item. The host filters by it to render each slot. Not merged into component props. Cap is that location's `surfaces.<name>.max`; a surface not listed there defaults to 1. Examples: `main-top`, `modal`. |
-| `component` | Yes | — | Renderer | Universal name, never a framework path. Examples: `Banner`, `OnboardingModal`. The renderer registry maps it to a real component, template, or view. Missing or unregistered = fail closed: render nothing, and the renderer logs a warning. CI can flag unregistered names. Not merged into component props. See [the renderer contract](../../renderers.md). |
+| `component` | Yes | — | Renderer | Universal name, never a framework path. Examples: `Banner`, `OnboardingModal`. The React registry maps it to a React component. Missing or unregistered = fail closed: render nothing, and the renderer logs a warning. CI can flag unregistered names. Not merged into component props. See [the renderer contract](../../renderers.md). |
 | `active.from` | No | Active immediately | Engine | UTC. A date with no time is midnight UTC. Inclusive at that exact instant. |
 | `active.to` | No | Live forever | Engine | UTC. A date with no time is midnight UTC. Exclusive at that exact instant. The modal omits it. |
 | `priority` | No | 100 | Engine | Lower numbers win. Ties go to the older filename (`id` ascending). |
