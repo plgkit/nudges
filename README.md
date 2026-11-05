@@ -1,29 +1,29 @@
 # Nudges
 
-**In-product advertising for your own product.**
+You already run ads inside your product. You just call them banners, tours, and "one last modal."
 
-Banners and short tours in slots you name. A few messages want the same spot. Nudges ranks them, remembers who already saw them, and stays quiet after dismiss.
+The first one is an `if`. The fifth one is a fight: launch vs onboarding vs upgrade, two things opening at once, and somebody who dismissed it last week seeing it again. Nudges is the little ad server for that fight.
 
-Python, TypeScript, or Go picks the winner. React draws it, in a React app or [inlined](spec/renderers.md#inline-react) on a page those servers already send.
+Write the copy in YAML. Python, TypeScript, or Go picks who wins the slot. React draws it — in a React app, or [dropped onto](spec/renderers.md#inline-react) a page those servers already send.
 
 ![Home page with a dismissible banner above the sub-suit dashboard](docs/home.png)
 
-## The small ad server
+## What you are not going to build
 
-These are the jobs a homemade banner system grows into. They ship here, the same way in every language.
+Same rules in every language. Same file format.
 
-- **Priority.** Lower number wins. Tie goes to the older message. Forgot a number? It sorts as 100.
-- **Inventory.** The page has a cap. Each slot has a cap. When the page is full, the rest stay off it, even if a later slot still had room.
-- **Memory.** Dismiss sticks for that person, or for one org if you scope it that way. A view counts when it is actually on screen, once each time you ask. Drawing it again does not spend another view.
-- **Audience.** Everyone, unless you say otherwise. Your functions can require all, require one, or exclude. An unknown name skips the message.
-- **Schedule.** A UTC window on the message. Turn it on and off without touching the component.
-- **The record.** Impressions, clicks, and dismisses go to SQLite or Postgres. The browser does not send the user id. Your session does.
+- **Priority.** Lowest number gets the slot. A tie goes to the older message (the timestamp in the filename). Leave it off and you're a 100, which is "nice to have."
+- **Caps.** Home can show two things. The top slot can show two. The modal can show one. Fill the page and that's it — even if a later slot is still empty. Messages don't argue about this. Config does.
+- **Dismiss.** Close it and it stays gone for that person. Scope it to an org if you want it back when they switch companies. A view only counts when the thing is actually on screen, and only once per `decide()` result. Redrawing it doesn't burn another impression.
+- **Audience.** Omit it and everyone matches. Or wire up your own functions: all of these, one of these, none of these. Name a function you never wrote and that message never ships.
+- **Schedule.** `active.from` / `active.to`, UTC. Kill a campaign in YAML. Don't redeploy the banner.
+- **The log.** Impressions, clicks, dismisses in SQLite or Postgres. The browser never sends `user_id`. Your session does.
 
-A bad message is skipped. The page stays up.
+A broken message is skipped. The rest of the page keeps working. That's the whole point of not rolling this yourself at 11pm.
 
-## Try the supersuit
+## Try it
 
-The sample product sells supersuits. The banner and the tour are ordinary nudges.
+The demo sells supersuits. Close the banner. Finish the tour. Reload. Switch users in the top bar — the other person hasn't seen any of it yet.
 
 From `spec/examples/demo`:
 
@@ -32,23 +32,21 @@ npm install
 script/server
 ```
 
-Open the URL Vite prints. Close the banner, finish the tour, reload. Switch users in the top bar. The other person still sees both.
-
-Other backends: `script/server --backend go` or `script/server --backend node`.
+Open the URL Vite prints. Prefer Go or Node? `script/server --backend go` or `--backend node`.
 
 [What to click](spec/examples/demo/README.md).
 
-## Add a slot
+## Put it in your app
 
 ```
 your-app/plgkit/nudges/
-  config.yml        # how many messages a page may show
+  config.yml        # how many things a page may show
   messages/*.yml    # one message per file
-  audiences.py      # or audiences.go / audiences.ts
+  audiences.py      # or .go / .ts
 ```
 
-1. `plgkit migrate` once. No `PLGKIT_DATABASE_URL` means a local SQLite file. Point it at Postgres when you want that. From this repo: `python -m plgkit migrate` in `packages/python`.
-2. One events route. The signed-in user comes from the session.
+1. `plgkit migrate` once. Leave `PLGKIT_DATABASE_URL` unset for a local SQLite file, or point it at Postgres. In this repo that's `python -m plgkit migrate` from `packages/python`.
+2. One events route. Pull the signed-in user off the session, not the JSON.
 
 ```python
 from plgkit import handle_event
@@ -60,7 +58,7 @@ def nudges_events():
     return ("", handle_event(request.get_json(silent=True), session.get("user_id"), verify))
 ```
 
-3. Ask once for the page, then draw the slot.
+3. Ask once for the page. Drop a slot where the banner should live.
 
 ```jsx
 const decide = (location, context) => yourBackend.decide(location, context);
@@ -76,28 +74,28 @@ const decide = (location, context) => yourBackend.decide(location, context);
 </NudgeProvider>
 ```
 
-Go and TypeScript routes, message fields, and the tour: [spec/examples/README.md](spec/examples/README.md).
+Go and TypeScript routes, the YAML fields, the tour slot: [spec/examples/README.md](spec/examples/README.md).
 
-## Map
+## Where things live
 
 | Path | What |
 | --- | --- |
 | [packages/python](packages/python), [packages/node](packages/node), [packages/go](packages/go) | Pick the message, save the event, migrate |
 | [packages/react](packages/react) | The slot, plus sample `Banner` and `OnboardingModal` |
-| [spec/examples](spec/examples) | Sample messages, audiences, and config |
+| [spec/examples](spec/examples) | Sample messages, audiences, config |
 | [spec/examples/demo](spec/examples/demo) | The supersuit, three backends |
-| [spec/renderers.md](spec/renderers.md) | React, and inline React |
+| [spec/renderers.md](spec/renderers.md) | React, including inline React |
 | [core/migrations](core/migrations) | The SQL |
 
-## Local do-over
+## I dismissed it and I want it back
 
-Closed one and want it back on your machine?
+Dev machine only:
 
 ```bash
 plgkit undismiss <nudge_id> --user <user_id>
 ```
 
-Dev only. It deletes that person's dismiss and impression rows for that one nudge.
+Deletes that person's dismiss and impression rows for that one nudge. Not for production.
 
 ## Agents
 
