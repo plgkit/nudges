@@ -7,3 +7,5 @@ The message YAML in `../messages/` is shared by every language. In your app, mes
 In your own app, the audience file lives at `plgkit/nudges/audiences.go`. Nudges config lives at `plgkit/nudges/config.yml` and is Nudges-only. Events are saved the same way in every language. Setup steps are in [the examples readme](../README.md#setup).
 
 The context you pass to `decide` is a map, the same map the audience functions take. Put the person under `user` (`id`, `species`, `country_code`, `birth_date`, `is_staff`, `has_active_subscription`). Other facts sit beside `user`, such as `organization_id`.
+
+The page still draws with React. Use a React front end, or inline React on the HTML this server sends. Steps: [Inline React](../../renderers.md#inline-react).

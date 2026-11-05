@@ -1,6 +1,6 @@
 # Nudges
 
-Small banners and modals in named slots on your site. You pick **what** to show in Python, TypeScript, or Go. React (for now) draws it.
+Small banners and modals in named slots on your site. You pick **what** to show in Python, TypeScript, or Go. React draws it. Use a React front end, or inline React on a page those servers send.
 
 ![Home page with a dismissible banner above the sub-suit dashboard](docs/home.png)
 
@@ -88,6 +88,8 @@ const decide = (location, context) => yourBackend.decide(location, context);
   <NudgeSurface surface="main-top" />
 </NudgeProvider>
 ```
+
+A React front end uses that provider in the page tree. A Python, Go, or TypeScript page inlines the same provider: one div, plus one React file. Steps: [Inline React](spec/renderers.md#inline-react).
 
 Go and TypeScript handlers, and the onboarding modal slot: [spec/examples/README.md](spec/examples/README.md).
 

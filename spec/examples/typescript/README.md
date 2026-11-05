@@ -5,3 +5,5 @@ The examples in `spec/examples/` default to Python. Day-one languages are Python
 The message YAML in `../messages/` is shared by every language. In your app, messages live at `plgkit/nudges/messages/`.
 
 In your own app, the audience file lives at `plgkit/nudges/audiences.ts`. Nudges config lives at `plgkit/nudges/config.yml` and is Nudges-only. Events are saved the same way in every language. Setup steps are in [the examples readme](../README.md#setup).
+
+The page still draws with React. Use a React front end, or inline React on the HTML this server sends. Steps: [Inline React](../../renderers.md#inline-react).

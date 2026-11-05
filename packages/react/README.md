@@ -1,6 +1,8 @@
 # React nudges
 
-This package draws nudges in a React page. Your backend decides which ones. This package only shows them and sends what the person did.
+This package draws nudges. Your backend decides which ones. This package only shows them and sends what the person did.
+
+Use it from a React front end, or inline it on a page served by Python, Go, or TypeScript. The inline mount (a div, one React file, and the decide route) is in [Inline React](../../spec/renderers.md#inline-react).
 
 ## Page
 
