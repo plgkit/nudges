@@ -328,76 +328,83 @@ header .nudge-banner img {
 }
 
 .nudge-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  padding: var(--space-5);
-  background: color-mix(in srgb, var(--color-neutral-900) 55%, transparent);
   font-family: var(--font-ui);
   color: var(--color-neutral-900);
+  background: rgb(107 102 126 / 72%);
 }
 
-.nudge-modal [role="dialog"] {
-  width: min(640px, 100%);
+.nudge-modal__dialog {
+  position: relative;
+  width: min(420px, 100%);
   max-height: calc(100vh - var(--space-8));
   overflow: auto;
   box-sizing: border-box;
-  background: var(--color-neutral-50);
-  border: 1px solid var(--color-neutral-200);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: var(--space-5);
+  background: #f8f7f9;
+  border: 0;
+  border-radius: 16px;
+  box-shadow:
+    0 24px 48px rgb(29 22 54 / 18%),
+    0 8px 16px rgb(29 22 54 / 10%);
+  padding: var(--space-6) var(--space-6) var(--space-5);
 }
 
-.nudge-modal img {
-  display: block;
-  width: 100%;
-  max-height: calc(var(--space-12) * 2);
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  background: var(--color-neutral-200);
-}
-
-.nudge-modal h2 {
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-display);
-  letter-spacing: var(--track-display);
-  line-height: 1.25;
-  margin: var(--space-4) 0 var(--space-1);
-}
-
-.nudge-modal p {
-  margin: var(--space-1) 0 var(--space-4);
-  font-size: var(--text-base);
-  line-height: var(--leading-body);
-  color: var(--color-neutral-700);
-}
-
-.nudge-modal a {
-  display: inline-block;
-  background: var(--color-primary-600);
-  color: var(--color-primary-50);
-  text-decoration: none;
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-4);
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-display);
-}
-
-.nudge-modal button {
-  display: block;
-  margin-top: var(--space-4);
-  padding: var(--space-0);
+.nudge-modal__close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  margin: 0;
+  padding: var(--space-1);
   border: 0;
   background: transparent;
   color: var(--color-neutral-600);
   cursor: pointer;
   font-family: var(--font-ui);
-  font-size: var(--text-sm);
+  font-size: var(--text-xl);
+  line-height: 1;
+}
+
+.nudge-modal__slide {
+  margin: 0;
+}
+
+.nudge-modal img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f2e8d5;
+}
+
+.nudge-modal h2 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-display);
+  letter-spacing: var(--track-display);
+  line-height: 1.25;
+  color: #1e1b4b;
+}
+
+.nudge-modal p {
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: #4b4868;
+}
+
+.nudge-modal__cta {
+  display: inline-block;
+  margin: 0;
+  padding: 12px 20px;
+  border: 0;
+  background: #431fd3;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-display);
+  line-height: 1.25;
 }
