@@ -136,8 +136,81 @@ function Home({ user }: { user: DemoUser }) {
       <header className="page-banner-slot">
         <NudgeSurface surface="main-top" />
       </header>
-      <h1>Home</h1>
-      <p>The banner sits in the header, a few layers down.</p>
+      <div className="page-body page-body--home">
+        <h1>Sub-suit</h1>
+
+        <section className="page-metrics" aria-label="Key sub-suit metrics">
+          <article className="page-metric-card">
+            <p className="page-metric-card__value">
+              92<span className="page-metric-card__unit">%</span>
+            </p>
+            <p className="page-metric-card__label">Power core</p>
+          </article>
+          <article className="page-metric-card">
+            <p className="page-metric-card__value">
+              14.2<span className="page-metric-card__unit">h</span>
+            </p>
+            <p className="page-metric-card__label">Flight time this week</p>
+          </article>
+          <article className="page-metric-card">
+            <p className="page-metric-card__value">
+              98<span className="page-metric-card__unit">%</span>
+            </p>
+            <p className="page-metric-card__label">Stability index</p>
+          </article>
+        </section>
+
+        <section className="page-panel" aria-label="Unit status">
+          <div className="page-panel__head">
+            <div>
+              <h2 className="page-panel__title">Trainer Mark I</h2>
+              <p className="page-panel__sub">Unit 7 · Dock 3</p>
+            </div>
+            <span className="page-badge page-badge--ready">Ready to fly</span>
+          </div>
+          <p className="page-meta">Last flight · Yesterday · River North · 22 min</p>
+          <div className="page-actions">
+            <button type="button" className="page-btn page-btn--primary">
+              Run diagnostics
+            </button>
+            <button type="button" className="page-btn">
+              Flight log
+            </button>
+          </div>
+        </section>
+
+        <section className="page-snapshot" aria-label="Systems snapshot">
+          <h2 className="page-snapshot__title">Systems snapshot</h2>
+          <dl className="page-snapshot__list">
+            <div>
+              <dt>Gauntlets</dt>
+              <dd>Synced · 100%</dd>
+            </div>
+            <div>
+              <dt>Cape stabilizers</dt>
+              <dd>Auto-tuned</dd>
+            </div>
+            <div>
+              <dt>Thrusters</dt>
+              <dd>Training cap · 40%</dd>
+            </div>
+            <div>
+              <dt>Hero network</dt>
+              <dd>Not paired</dd>
+            </div>
+            <div>
+              <dt>Firmware</dt>
+              <dd>Sub-suit 2.4.1</dd>
+            </div>
+            <div>
+              <dt>Next service</dt>
+              <dd>In 12 days</dd>
+            </div>
+          </dl>
+        </section>
+
+        <p className="page-footnote">Telemetry synced 8:15 AM · No maintenance alerts</p>
+      </div>
     </NudgeProvider>
   );
 }
@@ -152,11 +225,7 @@ function GetStarted({ user }: { user: DemoUser }) {
       registry={{ OnboardingModal }}
       decide={decide}
     >
-      <main className="page-modal-slot">
-        <NudgeSurface surface="modal" />
-      </main>
-      <h1>Get started</h1>
-      <p>The onboarding message sits in the modal slot.</p>
+      <NudgeSurface surface="modal" />
     </NudgeProvider>
   );
 }

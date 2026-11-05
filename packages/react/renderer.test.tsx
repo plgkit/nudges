@@ -376,13 +376,22 @@ describe("NudgeSurface", () => {
     mount(show(false));
     await settle();
     const quiet = document.body.querySelector(".nudge-modal");
-    expect(quiet?.querySelector("button")).toBeNull();
+    expect(quiet?.querySelector('button[aria-label="Close"]')).toBeNull();
     const before = dismissCount();
     await act(async () => {
       quiet?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     });
     expect(dismissCount()).toBe(before);
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+
+    const requiredCta = document.body.querySelector<HTMLAnchorElement>("a.nudge-modal__cta");
+    if (!requiredCta) throw new Error("missing modal cta");
+    await act(async () => {
+      requiredCta.click();
+    });
+    expect(dismissCount()).toBe(before + 1);
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it("shows one onboarding slide at a time", async () => {

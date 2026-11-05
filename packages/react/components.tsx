@@ -27,6 +27,10 @@ export type OnboardingSlide = {
 
 export type OnboardingModalProps = {
   nudge_id: string;
+  /**
+   * When true, ×, backdrop, and Escape can close the overlay without a dismiss event.
+   * When false, only the last slide primary CTA with dismiss_on_click sends dismiss.
+   */
   dismissible?: boolean;
   slides?: OnboardingSlide[];
 };
@@ -95,6 +99,18 @@ export function OnboardingModal(props: OnboardingModalProps) {
   const label = slide?.title ?? validSlides[0]?.title ?? "Onboarding";
   const dismissible = props.dismissible === true;
   const canStep = slideCount > 1;
+
+  function completeCta() {
+    if (dismissible) {
+      setOpen(false);
+      return;
+    }
+    if (slideIndex < slideCount - 1) {
+      setActiveIndex(slideIndex + 1);
+      return;
+    }
+    dismiss();
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -194,7 +210,7 @@ export function OnboardingModal(props: OnboardingModalProps) {
                     className="nudge-modal__cta"
                     cta={slide.primary_cta}
                     click={click}
-                    dismiss={() => setOpen(false)}
+                    dismiss={completeCta}
                   />
                 ) : null}
               </article>

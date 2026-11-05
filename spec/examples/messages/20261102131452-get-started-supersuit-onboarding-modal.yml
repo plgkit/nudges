@@ -9,7 +9,7 @@ audience: # Optional. Omitted entirely means everyone matches. Omitted require_a
   require_all: [has_active_supersuit_subscription]
 component: "OnboardingModal" # Required universal name, never a framework path. The renderer registry maps it to the real component.
 render_props: # Required. {} is valid. Opaque to the core and passed through as props. Missing = fail closed.
-  dismissible: true # Presentation only: show a close control. Does not gate dismiss(nudge_id, event).
+  dismissible: false # No ×, backdrop, or Escape. Last slide CTA with dismiss_on_click sends dismiss.
   slides:
     - title: "It's time to suit up"
       subtitle: "You need to believe, to achieve."

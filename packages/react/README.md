@@ -50,6 +50,6 @@ function Banner(props) {
 
 A view is recorded once each time `decide` returns, and only if that component is actually on screen. Drawing it again, or mounting it again for the same result, does not count. A new `decide` result can count again.
 
-`click` and `dismiss` send those actions. `dismiss` also removes that nudge from the page right away, before the next `decide()` call. If a button has `dismiss_on_click`, call `click`, then `dismiss`. The sample banner does that for its main button. The sample `OnboardingModal` only sends `dismiss` from the × control; backdrop click, Escape, and CTAs close the overlay without that event.
+`click` and `dismiss` send those actions. `dismiss` also removes that nudge from the page right away, before the next `decide()` call. If a button has `dismiss_on_click`, call `click`, then `dismiss`. The sample banner does that for its main button. The sample `OnboardingModal` uses `dismissible` in `render_props`: when `true`, only × sends `dismiss`; backdrop, Escape, and CTAs close visually without that event. When `false`, there is no × or backdrop dismiss; each slide CTA advances the tour and the last one sends `dismiss`.
 
 If a slot sits outside the provider, or the component name is missing from the registry, nothing is drawn and the console gets a warning. The page keeps working. A failed request does not crash the page.
