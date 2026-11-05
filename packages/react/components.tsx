@@ -75,20 +75,7 @@ const overlayStyle = {
   alignItems: "center",
   justifyContent: "center",
   boxSizing: "border-box",
-  padding: "var(--space-5)",
-  background: "color-mix(in srgb, var(--color-neutral-900) 55%, transparent)",
-} as const;
-
-const dialogStyle = {
-  width: "min(640px, 100%)",
-  maxHeight: "calc(100vh - var(--space-8))",
-  overflow: "auto",
-  boxSizing: "border-box",
-  background: "var(--color-neutral-50)",
-  border: "1px solid var(--color-neutral-200)",
-  borderRadius: "var(--radius-lg)",
-  boxShadow: "var(--shadow-md)",
-  padding: "var(--space-5)",
+  padding: "var(--space-5, 24px)",
 } as const;
 
 /** Matches the get-started onboarding sample message. */
@@ -131,30 +118,40 @@ export function OnboardingModal(props: OnboardingModalProps) {
     >
       <section
         ref={dialogRef}
+        className="nudge-modal__dialog"
         role="dialog"
         aria-modal="true"
         aria-label={label}
         tabIndex={-1}
-        style={dialogStyle}
       >
+        {dismissible ? (
+          <button
+            type="button"
+            className="nudge-modal__close"
+            aria-label="Close"
+            onClick={() => dismiss()}
+          >
+            ×
+          </button>
+        ) : null}
         {slides.map((slide, index) => {
           if (!slide || typeof slide !== "object") return null;
           return (
-            <article key={`${slide.title ?? "slide"}-${index}`}>
+            <article key={`${slide.title ?? "slide"}-${index}`} className="nudge-modal__slide">
               {slide.asset ? <img src={slide.asset} alt={slide.title ?? ""} /> : null}
               {slide.title ? <h2>{slide.title}</h2> : null}
               {slide.subtitle ? <p>{slide.subtitle}</p> : null}
               {slide.primary_cta ? (
-                <Cta cta={slide.primary_cta} click={click} dismiss={dismiss} />
+                <Cta
+                  className="nudge-modal__cta"
+                  cta={slide.primary_cta}
+                  click={click}
+                  dismiss={dismiss}
+                />
               ) : null}
             </article>
           );
         })}
-        {dismissible ? (
-          <button type="button" onClick={() => dismiss()}>
-            Close
-          </button>
-        ) : null}
       </section>
     </div>,
     document.body,
@@ -162,10 +159,12 @@ export function OnboardingModal(props: OnboardingModalProps) {
 }
 
 function Cta({
+  className,
   cta,
   click,
   dismiss,
 }: {
+  className?: string;
   cta: NudgeCta;
   click: () => void;
   dismiss: () => void;
@@ -177,13 +176,13 @@ function Cta({
   };
   if (cta.url) {
     return (
-      <a href={cta.url} onClick={onClick}>
+      <a className={className} href={cta.url} onClick={onClick}>
         {cta.text}
       </a>
     );
   }
   return (
-    <button type="button" onClick={onClick}>
+    <button type="button" className={className} onClick={onClick}>
       {cta.text}
     </button>
   );
