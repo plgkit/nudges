@@ -4,8 +4,6 @@ Small banners and modals in named slots on your site. You pick **what** to show 
 
 ![Home page with a dismissible banner above the sub-suit dashboard](docs/home.png)
 
-![Get started tour: one slide at a time, with the others listed on the left](docs/tour.png)
-
 ## Try it
 
 From `spec/examples/demo`:
