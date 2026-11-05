@@ -1,6 +1,8 @@
-# plgkit
+# Nudges
 
 Small banners and modals in named slots on your site. You pick **what** to show in Python, TypeScript, or Go. React (for now) draws it.
+
+![Home page with a dismissible banner above the sub-suit dashboard](docs/home.png)
 
 ## Try it
 
@@ -11,7 +13,7 @@ npm install
 script/server
 ```
 
-Open the URL Vite prints. Switch users in the top bar, close the banner and modal, reload.
+Open the URL Vite prints. Switch users in the top bar. Home has a banner you can close. Get started is a short tour. The last slide dismisses it.
 
 Other backends: `script/server --backend go` or `script/server --backend node`.
 
@@ -31,7 +33,7 @@ Details: [spec/examples/demo/README.md](spec/examples/demo/README.md).
   React NudgeSurface("main-top")  ──POST──►  handle_event (impression / click / dismiss)
 ```
 
-Your backend returns rows like this (one winner per surface, after caps and rules):
+Your backend returns one list for the page. Each slot draws the rows for its surface.
 
 ```json
 [
@@ -44,9 +46,11 @@ Your backend returns rows like this (one winner per surface, after caps and rule
 ]
 ```
 
-The browser POSTs events; it does **not** send `user_id` (your session supplies that).
+The browser POSTs events. It does **not** send `user_id`. Your session supplies that.
 
-## Copy the sample into your app
+## Use it in your app
+
+Copy the sample:
 
 ```
 your-app/
@@ -56,7 +60,36 @@ your-app/
     audiences.py    # or audiences.go / audiences.ts
 ```
 
-Walkthrough: [spec/examples/README.md](spec/examples/README.md).
+1. Leave `PLGKIT_DATABASE_URL` unset to use a local SQLite file, or point it at Postgres. Run `plgkit migrate` once. From this repo, Python is `python -m plgkit migrate` in `packages/python`.
+2. Mount one events route. Pass the signed-in user from the session.
+
+```python
+from plgkit import handle_event
+
+verify = {"organization_id": lambda user_id, value: user_belongs_to(user_id, value)}
+
+@app.post("/api/nudges/events")
+def nudges_events():
+    return ("", handle_event(request.get_json(silent=True), session.get("user_id"), verify))
+```
+
+3. On the page, ask your backend for the list and draw a slot.
+
+```jsx
+const decide = (location, context) => yourBackend.decide(location, context);
+
+<NudgeProvider
+  location="home"
+  endpoint="/api/nudges/events"
+  context={{ organization_id: "acme" }}
+  registry={{ Banner }}
+  decide={decide}
+>
+  <NudgeSurface surface="main-top" />
+</NudgeProvider>
+```
+
+Go and TypeScript handlers, and the onboarding modal slot: [spec/examples/README.md](spec/examples/README.md).
 
 ## Repo map
 
