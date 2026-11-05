@@ -345,7 +345,13 @@ header .nudge-banner img {
   box-shadow:
     0 24px 48px rgb(29 22 54 / 18%),
     0 8px 16px rgb(29 22 54 / 10%);
-  padding: var(--space-6) var(--space-6) var(--space-5);
+  padding: var(--space-8);
+}
+
+.nudge-modal__dialog--tabs {
+  width: min(640px, 100%);
+  padding: 0;
+  overflow: hidden;
 }
 
 .nudge-modal__close {
@@ -361,6 +367,61 @@ header .nudge-banner img {
   font-family: var(--font-ui);
   font-size: var(--text-xl);
   line-height: 1;
+}
+
+.nudge-modal__body--tabs {
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.nudge-modal__tabs {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 11rem;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-8);
+  border: 0;
+  background: var(--color-primary-50);
+  box-sizing: content-box;
+}
+
+.nudge-modal__tab {
+  margin: 0;
+  padding: var(--space-3) var(--space-3);
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-neutral-700);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-ui);
+  line-height: 1.35;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.nudge-modal__tab:hover:not([aria-selected="true"]) {
+  background: rgb(91 42 207 / 10%);
+  color: var(--color-neutral-900);
+}
+
+.nudge-modal__tab[aria-selected="true"] {
+  background: var(--color-primary-100);
+  color: var(--color-primary-900);
+  font-weight: var(--weight-display);
+}
+
+.nudge-modal__dialog--tabs .nudge-modal__panel {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-8);
+  box-sizing: border-box;
 }
 
 .nudge-modal__slide {

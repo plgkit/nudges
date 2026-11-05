@@ -18,3 +18,17 @@ render_props: # Required. {} is valid. Opaque to the core and passed through as 
         text: "Activate your suit"
         url: "https://supersuit.tech/examples/activate-your-suit"
         dismiss_on_click: true # This control calls click, then dismiss, for this nudge.
+    - title: "Power up your gauntlets"
+      subtitle: "Charge them overnight so you're ready when duty calls."
+      asset: "20261102131452-get-started-supersuit-onboarding-modal/slide_2.png"
+      primary_cta:
+        text: "View power settings"
+        url: "https://supersuit.tech/examples/power-settings"
+        dismiss_on_click: true
+    - title: "Join the hero network"
+      subtitle: "Connect with other supersuits in your city and share tips."
+      asset: "20261102131452-get-started-supersuit-onboarding-modal/slide_3.png"
+      primary_cta:
+        text: "Open the network"
+        url: "https://supersuit.tech/examples/hero-network"
+        dismiss_on_click: true

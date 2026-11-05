@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNudgeTracking } from "./tracking.js";
 
@@ -81,30 +81,49 @@ const overlayStyle = {
 /** Matches the get-started onboarding sample message. */
 export function OnboardingModal(props: OnboardingModalProps) {
   const { click, dismiss } = useNudgeTracking(props.nudge_id);
-  const dismissRef = useRef(dismiss);
-  dismissRef.current = dismiss;
+  const [open, setOpen] = useState(true);
+  const closeVisuallyRef = useRef(() => setOpen(false));
+  closeVisuallyRef.current = () => setOpen(false);
   const dialogRef = useRef<HTMLElement>(null);
-  const slides = Array.isArray(props.slides) ? props.slides : [];
-  const label = slides[0]?.title ?? "Onboarding";
+  const validSlides = (Array.isArray(props.slides) ? props.slides : []).filter(
+    (slide): slide is OnboardingSlide => Boolean(slide && typeof slide === "object"),
+  );
+  const [activeIndex, setActiveIndex] = useState(0);
+  const slideCount = validSlides.length;
+  const slideIndex = slideCount === 0 ? 0 : Math.min(activeIndex, slideCount - 1);
+  const slide = validSlides[slideIndex];
+  const label = slide?.title ?? validSlides[0]?.title ?? "Onboarding";
   const dismissible = props.dismissible === true;
+  const canStep = slideCount > 1;
 
   useEffect(() => {
+    if (!open) return;
     dialogRef.current?.focus();
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     function onKey(event: KeyboardEvent) {
-      if (event.key !== "Escape" || !dismissible) return;
-      event.preventDefault();
-      dismissRef.current();
+      if (event.key === "Escape" && dismissible) {
+        event.preventDefault();
+        closeVisuallyRef.current();
+        return;
+      }
+      if (!canStep) return;
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setActiveIndex((current) => Math.min(current + 1, slideCount - 1));
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setActiveIndex((current) => Math.max(current - 1, 0));
+      }
     }
     document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", onKey);
     };
-  }, [dismissible]);
+  }, [dismissible, open, canStep, slideCount]);
 
-  if (typeof document === "undefined") return null;
+  if (typeof document === "undefined" || !open) return null;
 
   return createPortal(
     <div
@@ -113,12 +132,12 @@ export function OnboardingModal(props: OnboardingModalProps) {
       style={overlayStyle}
       onClick={(event) => {
         if (!dismissible) return;
-        if (event.target === event.currentTarget) dismiss();
+        if (event.target === event.currentTarget) setOpen(false);
       }}
     >
       <section
         ref={dialogRef}
-        className="nudge-modal__dialog"
+        className={canStep ? "nudge-modal__dialog nudge-modal__dialog--tabs" : "nudge-modal__dialog"}
         role="dialog"
         aria-modal="true"
         aria-label={label}
@@ -134,24 +153,54 @@ export function OnboardingModal(props: OnboardingModalProps) {
             ×
           </button>
         ) : null}
-        {slides.map((slide, index) => {
-          if (!slide || typeof slide !== "object") return null;
-          return (
-            <article key={`${slide.title ?? "slide"}-${index}`} className="nudge-modal__slide">
-              {slide.asset ? <img src={slide.asset} alt={slide.title ?? ""} /> : null}
-              {slide.title ? <h2>{slide.title}</h2> : null}
-              {slide.subtitle ? <p>{slide.subtitle}</p> : null}
-              {slide.primary_cta ? (
-                <Cta
-                  className="nudge-modal__cta"
-                  cta={slide.primary_cta}
-                  click={click}
-                  dismiss={dismiss}
-                />
-              ) : null}
-            </article>
-          );
-        })}
+        <div className={canStep ? "nudge-modal__body nudge-modal__body--tabs" : "nudge-modal__body"}>
+          {canStep ? (
+            <div className="nudge-modal__tabs" role="tablist" aria-label="Slides" aria-orientation="vertical">
+              {validSlides.map((entry, index) => {
+                const tabId = `${props.nudge_id}-tab-${index}`;
+                const tabLabel = entry.title?.trim() || `Slide ${index + 1}`;
+                return (
+                  <button
+                    key={`${entry.title ?? "slide"}-tab-${index}`}
+                    type="button"
+                    id={tabId}
+                    className="nudge-modal__tab"
+                    role="tab"
+                    aria-selected={index === slideIndex}
+                    aria-controls={`${props.nudge_id}-slide-panel`}
+                    onClick={() => setActiveIndex(index)}
+                  >
+                    {tabLabel}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          <div
+            className="nudge-modal__panel"
+            role={canStep ? "tabpanel" : undefined}
+            id={canStep ? `${props.nudge_id}-slide-panel` : undefined}
+            aria-labelledby={
+              canStep ? `${props.nudge_id}-tab-${slideIndex}` : `${props.nudge_id}-slide-title`
+            }
+          >
+            {slide ? (
+              <article key={`${slide.title ?? "slide"}-${slideIndex}`} className="nudge-modal__slide">
+                {slide.asset ? <img src={slide.asset} alt={slide.title ?? ""} /> : null}
+                {slide.title ? <h2 id={`${props.nudge_id}-slide-title`}>{slide.title}</h2> : null}
+                {slide.subtitle ? <p>{slide.subtitle}</p> : null}
+                {slide.primary_cta ? (
+                  <Cta
+                    className="nudge-modal__cta"
+                    cta={slide.primary_cta}
+                    click={click}
+                    dismiss={() => setOpen(false)}
+                  />
+                ) : null}
+              </article>
+            ) : null}
+          </div>
+        </div>
       </section>
     </div>,
     document.body,

@@ -348,7 +348,7 @@ describe("NudgeSurface", () => {
     await act(async () => {
       overlay?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(dismissCount()).toBe(1);
+    expect(dismissCount()).toBe(0);
     expect(document.body.querySelector('[role="dialog"]')).toBeNull();
     expect(document.body.style.overflow).toBe("");
 
@@ -359,7 +359,7 @@ describe("NudgeSurface", () => {
     await act(async () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     });
-    expect(dismissCount()).toBe(2);
+    expect(dismissCount()).toBe(0);
     expect(document.body.querySelector('[role="dialog"]')).toBeNull();
 
     mount(show(true));
@@ -370,7 +370,7 @@ describe("NudgeSurface", () => {
     await act(async () => {
       close.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    expect(dismissCount()).toBe(3);
+    expect(dismissCount()).toBe(1);
     expect(document.body.querySelector('[role="dialog"]')).toBeNull();
 
     mount(show(false));
@@ -383,6 +383,45 @@ describe("NudgeSurface", () => {
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     });
     expect(dismissCount()).toBe(before);
+  });
+
+  it("shows one onboarding slide at a time", async () => {
+    mount(
+      <NudgeProvider
+        location="get-started"
+        endpoint="/api/nudges/events"
+        context={{ organization_id: "acme" }}
+        registry={{ OnboardingModal }}
+        decide={async () => [
+          {
+            ...modalItem,
+            render_props: {
+              ...modalItem.render_props,
+              slides: [
+                ...(modalItem.render_props?.slides ?? []),
+                {
+                  title: "Power up your gauntlets",
+                  subtitle: "Charge them overnight.",
+                },
+              ],
+            },
+          },
+        ]}
+      >
+        <NudgeSurface surface="modal" />
+      </NudgeProvider>,
+    );
+    await settle();
+    const panel = document.body.querySelector('[role="tabpanel"]');
+    expect(panel?.querySelector("h2")?.textContent).toBe("It's time to suit up");
+    const secondTab = Array.from(document.body.querySelectorAll('[role="tab"]')).find(
+      (node) => node.textContent === "Power up your gauntlets",
+    );
+    if (!secondTab) throw new Error("missing second slide tab");
+    await act(async () => {
+      secondTab.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(panel?.querySelector("h2")?.textContent).toBe("Power up your gauntlets");
   });
 });
 
@@ -591,8 +630,9 @@ describe("tracking", () => {
     await act(async () => {
       modalLink.click();
     });
-    expect(postedBodies().slice(-2).map((post) => post.body.action)).toEqual(["click", "dismiss"]);
+    expect(postedBodies().slice(-1).map((post) => post.body.action)).toEqual(["click"]);
     expect(postedBodies().slice(-1)[0]?.body.nudge_id).toBe(modalId);
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
 
     view.unmount();
     const bannerOnly = mount(
