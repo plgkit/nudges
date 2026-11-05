@@ -59,7 +59,7 @@ The provider calls `decide(location, context)` once, so the page limits cover ev
 - A `NudgeSurface` outside a provider shows nothing and writes a warning. It does not break the page.
 - A view is counted once per `decide()` result, and that count is not returned to the component. Drawing the component again does not count. The count starts over on each new `decide()` result.
 - `useNudgeTracking`, Python `nudge_tracking`, and the phone nudge tracking wrapper all return `{ click, dismiss }`. They share this contract: same `endpoint`, same `context`, same POST.
-- `dismiss_on_click` means call `click`, then `dismiss`.
+- `dismiss_on_click` means call `click`, then `dismiss`. The sample `OnboardingModal` with `dismissible: false` advances on earlier slides and only calls `dismiss` on the last one.
 - Each helper call POSTs `{ nudge_id, action, context }` to `endpoint`. `action` is `impression`, `click`, or `dismiss`. `context` can be left out.
 - The browser never sends `user_id`. If `context` includes `user_id`, the server ignores it. `user_id` always comes from the server session. If it is missing, the server writes nothing and does not throw an error into the page.
 - On the server, pass the parsed body to `handle_event` (Python), `handleEvent` (TypeScript), or `HandleEvent` (Go). Give it a `verify` map: context key to `(user_id, value) -> true or false`. Keep `organization_id` only when that function says the user belongs to the org. Keys with no function, or a function that is not true, are dropped. A bad body is status 400. A saved or ignored event is status 204. The saved row is `{ user_id, ...checked context }` in `plgkit_events`.

@@ -17,7 +17,7 @@ render_props: # Required. {} is valid. Opaque to the core and passed through as 
       primary_cta:
         text: "Activate your suit"
         url: "https://supersuit.tech/examples/activate-your-suit"
-        dismiss_on_click: true # This control calls click, then dismiss, for this nudge.
+        dismiss_on_click: true # Sample OnboardingModal: earlier slides advance. The last slide sends click, then dismiss.
     - title: "Power up your gauntlets"
       subtitle: "Charge them overnight so you're ready when duty calls."
       asset: "20261102131452-get-started-supersuit-onboarding-modal/slide_2.png"

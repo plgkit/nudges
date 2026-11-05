@@ -36,6 +36,8 @@ The TypeScript backend reads sample messages with the `yaml` package from this f
 
 The top bar has **Home** / **Get started**. On the right, stacked avatars show user **1** and **2** — hover to peek at the other, click the back one to switch. The server remembers that person in a cookie. The page does not send the user id.
 
-Home shows the banner. Get started shows the onboarding window. Press **Close** on each. Reload: they stay hidden for this person. Switch to the other person: both show again.
+Home shows the banner. Press **×** to dismiss it. Reload: it stays hidden for this person.
+
+Get started shows only the onboarding modal. There is no close control. Tabs or the button move between slides. The last button sends `dismiss`. Reload: the page is empty for this person until you undismiss. Switch to the other person: both messages show again.
 
 Dev only: to show a message again for **user_one**, run `plgkit undismiss <nudge_id> --user 1` from this folder (same `plgkit` as your backend). That deletes dismiss and impression rows for that user and nudge (view cap resets). Example: `plgkit undismiss 20261030183743-home-supersuit-launch-banner --user 1`.
