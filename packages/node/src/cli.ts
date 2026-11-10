@@ -2,6 +2,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { migrate, PlgkitError, undismiss } from "./store.ts";
+import { loadNudgesDir, validate } from "./validate.ts";
 
 export function main(argv = process.argv.slice(2)): number {
   if (argv.length === 0 || argv[0] === "-h" || argv[0] === "--help") {
@@ -21,6 +22,9 @@ export function main(argv = process.argv.slice(2)): number {
     console.log("Migrations are up to date.");
     return 0;
   }
+  if (argv[0] === "validate") {
+    return runValidate(argv.slice(1));
+  }
   if (argv[0] === "undismiss") {
     return runUndismiss(argv.slice(1));
   }
@@ -31,7 +35,25 @@ export function main(argv = process.argv.slice(2)): number {
 
 function usage() {
   console.error("Usage: plgkit migrate");
+  console.error("       plgkit validate [dir]");
   console.error("       plgkit undismiss <nudge_id> --user <user_id>");
+}
+
+function runValidate(args: string[]): number {
+  const root = args[0] ?? "plgkit/nudges";
+  try {
+    const { config, messages, audienceNames } = loadNudgesDir(root, "audiences.ts");
+    const problems = validate(config, messages, audienceNames);
+    if (problems.length > 0) {
+      for (const line of problems) console.error(line);
+      return 1;
+    }
+    console.log("Nudges config is valid.");
+    return 0;
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : String(err));
+    return 1;
+  }
 }
 
 function runUndismiss(args: string[]): number {

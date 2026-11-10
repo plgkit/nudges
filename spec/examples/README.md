@@ -49,7 +49,9 @@ const decide = (location, context) => yourBackend.decide(location, context);
 
    TypeScript, from this repo: `node --experimental-strip-types packages/node/src/cli.ts migrate`.
 
-4. Mount one handler on your own URL. Pass the signed-in user id from the session, and a `verify` map. Point the renderer's `endpoint` at that URL.
+4. Run `plgkit validate` on `plgkit/nudges` when you change messages, config, or audiences. It checks that every audience name in YAML exists in your audiences file, and that no surface max is higher than its location max. From this repo you can try `python -m plgkit validate spec/examples` (Python audiences), or point it at your copy under `plgkit/nudges`.
+
+5. Mount one handler on your own URL. Pass the signed-in user id from the session, and a `verify` map. Point the renderer's `endpoint` at that URL.
 
 `verify` maps a context key to a function. The function is `(user_id, value) -> true or false`. A key with no function is dropped. A key whose function is not true is dropped. `user_id` inside `context` is ignored.
 
