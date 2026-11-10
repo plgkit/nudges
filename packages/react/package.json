@@ -2,6 +2,15 @@
   "name": "@plgkit/nudges-react",
   "version": "0.0.0",
   "description": "Show nudges in a React page. Your backend decides which ones.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plgkit/nudges.git",
+    "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/plgkit/nudges/issues"
+  },
   "type": "module",
   "exports": "./index.ts",
   "types": "./index.ts",

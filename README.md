@@ -2,7 +2,7 @@
 
 You already run ads inside your product. You just call them banners, tours, and "one last modal."
 
-The first is an `if`. The fifth is a fight. Nudges is the little ad server for that fight: YAML copy, Python / TypeScript / Go picks the winner, React draws it — in a React app, or [dropped onto](spec/renderers.md#inline-react) a page those servers already send.
+The first is an `if`. The fifth is a fight. Nudges is the little ad server for that fight: YAML copy, Python / TypeScript / Go picks the winner, React draws it — in a React app, or [dropped onto](spec/renderers.md#inline-react) a page those servers already send. The license is [MIT](LICENSE).
 
 ![Home page with a dismissible banner above the sub-suit dashboard](docs/home.png)
 
@@ -29,6 +29,42 @@ script/server
 ```
 
 Vite prints a URL. `--backend go` or `--backend node` if you want. [What to click](spec/examples/demo/README.md).
+
+## Install
+
+The package metadata is ready for a registry. Nothing is published yet. Grab the source from this repository. We will publish to PyPI, npm, and the Go module proxy if there is interest.
+
+```bash
+git clone https://github.com/plgkit/nudges.git
+```
+
+| Language | From the clone | What you get |
+|---|---|---|
+| Python | `pip install ./nudges/packages/python` | `plgkit` and the `plgkit` command. Python 3.10 or newer. |
+| TypeScript | `npm install ./nudges/packages/node` | `plgkit` on Node 22.13 or newer. The entry file is TypeScript. |
+| Go | `go get github.com/plgkit/nudges@main` | `github.com/plgkit/nudges/packages/go`. Run this inside your Go module. |
+| React | `npm install ./nudges/packages/react` | `@plgkit/nudges-react`. React 18 or newer. The entry files are TypeScript. |
+
+Python can also install straight from GitHub:
+
+```bash
+pip install "plgkit @ git+https://github.com/plgkit/nudges.git#subdirectory=packages/python"
+```
+
+TypeScript and React install from the cloned package directories. Each npm package lives in its own folder, so a GitHub URL of the repository root has no `package.json` to install.
+
+Go imports the package after `go get`:
+
+```go
+import plgkit "github.com/plgkit/nudges/packages/go"
+```
+
+From a checkout, Node and Go run migrate like this:
+
+```bash
+node --experimental-strip-types packages/node/src/cli.ts migrate
+go run ./packages/go/cmd/plgkit migrate
+```
 
 ## Put it in your app
 

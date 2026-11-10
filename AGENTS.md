@@ -13,6 +13,7 @@ Read this before changing this repo, especially on Cloud Agent runs.
 - **Python first**, then TypeScript and Go, for the same behavior.
 - **Flat config** except `locations`. **ELI5, scannable** docs.
 - **Ask Chiedo** before non-trivial product or API changes unless the current task already includes approval.
+- The license is MIT. Packages install from this repository. Do not publish them to PyPI, npm, or a module proxy unless the task says to.
 - Reread the **full diff** before push. No confidential GitHub/Microsoft material in commits or docs.
 
 ## Demos and verification

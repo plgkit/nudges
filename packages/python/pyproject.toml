@@ -7,7 +7,16 @@ name = "plgkit"
 version = "0.0.1"
 description = "PLGKit nudges: choose what to show, and save impression, click, and dismiss events."
 requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
 dependencies = ["psycopg[binary]>=3.2", "PyYAML>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/plgkit/nudges"
+Source = "https://github.com/plgkit/nudges"
 
 [project.scripts]
 plgkit = "plgkit.cli:main"
