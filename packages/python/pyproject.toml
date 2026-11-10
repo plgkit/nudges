@@ -7,7 +7,7 @@ name = "plgkit"
 version = "0.0.1"
 description = "PLGKit nudges: choose what to show, and save impression, click, and dismiss events."
 requires-python = ">=3.10"
-dependencies = ["psycopg[binary]>=3.2"]
+dependencies = ["psycopg[binary]>=3.2", "PyYAML>=6.0"]
 
 [project.scripts]
 plgkit = "plgkit.cli:main"

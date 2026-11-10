@@ -27,6 +27,8 @@ func run(args []string) int {
 		}
 		fmt.Println("Migrations are up to date.")
 		return 0
+	case "validate":
+		return runValidate(args[1:])
 	case "undismiss":
 		return runUndismiss(args[1:])
 	default:
@@ -38,7 +40,29 @@ func run(args []string) int {
 
 func usage() {
 	fmt.Fprintln(os.Stderr, "Usage: plgkit migrate")
+	fmt.Fprintln(os.Stderr, "       plgkit validate [dir]")
 	fmt.Fprintln(os.Stderr, "       plgkit undismiss <nudge_id> --user <user_id>")
+}
+
+func runValidate(args []string) int {
+	root := "plgkit/nudges"
+	if len(args) > 0 {
+		root = args[0]
+	}
+	config, messages, names, err := plgkit.LoadNudgesDir(root, "audiences.go")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return 1
+	}
+	problems := plgkit.Validate(config, messages, names)
+	if len(problems) > 0 {
+		for _, line := range problems {
+			fmt.Fprintln(os.Stderr, line)
+		}
+		return 1
+	}
+	fmt.Println("Nudges config is valid.")
+	return 0
 }
 
 func runUndismiss(args []string) int {

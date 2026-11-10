@@ -12,7 +12,7 @@ assets_base_url: "/static/nudges/"
 
 # Per location. Surface maxes apply only inside that location.
 # A location not listed has max 1. A surface not listed under its location has max 1.
-# plgkit validate (follow-up PR) flags a surface max greater than its location max as unreachable.
+# plgkit validate flags a surface max greater than its location max as unreachable.
 locations:
   home:
     max: 2

@@ -1,8 +1,10 @@
-"""`plgkit migrate` creates the events table. `plgkit undismiss` is a dev-only CLI."""
+"""`plgkit migrate` and `plgkit validate` check config. `plgkit undismiss` is dev-only."""
 
 import sys
+from pathlib import Path
 
 from plgkit.store import PlgkitError, migrate, undismiss
+from plgkit.validate import load_nudges_dir, validate
 
 
 def main(argv=None):
@@ -12,6 +14,8 @@ def main(argv=None):
         raise SystemExit(0 if args else 1)
     if args[0] == "migrate":
         _migrate()
+    elif args[0] == "validate":
+        _validate(args[1:])
     elif args[0] == "undismiss":
         _undismiss(args[1:])
     else:
@@ -22,7 +26,24 @@ def main(argv=None):
 
 def _usage():
     print("Usage: plgkit migrate", file=sys.stderr)
+    print("       plgkit validate [dir]", file=sys.stderr)
     print("       plgkit undismiss <nudge_id> --user <user_id>", file=sys.stderr)
+
+
+def _validate(args):
+    root = Path(args[0] if args else "plgkit/nudges")
+    try:
+        config, messages, names = load_nudges_dir(root)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(1) from exc
+    problems = validate(config, messages, names)
+    if problems:
+        for line in problems:
+            print(line, file=sys.stderr)
+        raise SystemExit(1)
+    print("Nudges config is valid.")
+    raise SystemExit(0)
 
 
 def _migrate():
