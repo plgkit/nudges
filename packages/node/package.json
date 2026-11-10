@@ -1,9 +1,17 @@
 {
   "name": "plgkit",
   "version": "0.0.1",
-  "private": true,
   "type": "module",
   "description": "PLGKit nudges: choose what to show, and save impression, click, and dismiss events.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plgkit/nudges.git",
+    "directory": "packages/node"
+  },
+  "bugs": {
+    "url": "https://github.com/plgkit/nudges/issues"
+  },
   "engines": {
     "node": ">=22.13.0"
   },
